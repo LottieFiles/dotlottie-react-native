@@ -58,6 +58,14 @@ android {
     }
   }
 
+  buildFeatures {
+       compose = true
+  }
+
+  composeOptions {
+       kotlinCompilerExtensionVersion = "1.5.10"
+  }
+
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
@@ -85,6 +93,7 @@ android {
 repositories {
   mavenCentral()
   google()
+  maven { url = uri("https://jitpack.io" ) }
 }
 
 def kotlin_version = getExtOrDefault("kotlinVersion")
@@ -95,5 +104,10 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  implementation "com.github.LottieFiles:dotlottie-android:0.4.0"
+  implementation 'androidx.compose.ui:ui:1.5.0'
+  implementation 'androidx.compose.material:material:1.5.0'
+  implementation 'androidx.compose.ui:ui-tooling-preview:1.5.0'
+  implementation 'androidx.activity:activity-compose:1.8.0'
 }
 
