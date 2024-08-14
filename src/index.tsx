@@ -12,7 +12,9 @@ const LINKING_ERROR =
   '- You are not using Expo Go\n';
 
 type DotlottieReactNativeProps = {
-  color: string;
+  source: string;
+  loop?: boolean;
+  autoplay?: boolean;
   style: ViewStyle;
 };
 

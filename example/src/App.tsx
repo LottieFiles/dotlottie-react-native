@@ -4,7 +4,12 @@ import { DotlottieReactNativeView } from 'dotlottie-react-native';
 export default function App() {
   return (
     <View style={styles.container}>
-      <DotlottieReactNativeView color="#32a852" style={styles.box} />
+      <DotlottieReactNativeView
+        source="https://lottie.host/3a34a38a-e52f-486f-8709-3063f9d18af9/1tzAlg30dp.json"
+        style={styles.box}
+        loop={false}
+        autoplay={false}
+      />
     </View>
   );
 }
@@ -16,8 +21,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   box: {
-    width: 60,
-    height: 60,
+    width: 200,
+    height: 200,
     marginVertical: 20,
   },
 });
