@@ -13,6 +13,8 @@ const LINKING_ERROR =
 
 type DotlottieReactNativeProps = {
   source: string;
+  loop?: boolean;
+  autoplay?: boolean;
   style: ViewStyle;
 };
 
