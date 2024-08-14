@@ -10,15 +10,13 @@ npm install dotlottie-react-native
 
 ## Usage
 
-
 ```js
-import { DotlottieReactNativeView } from "dotlottie-react-native";
+import { DotlottieReactNativeView } from 'dotlottie-react-native';
 
 // ...
 
-<DotlottieReactNativeView color="tomato" />
+<DotlottieReactNativeView color="tomato" />;
 ```
-
 
 ## Contributing
 
