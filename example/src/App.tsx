@@ -1,15 +1,22 @@
-import { StyleSheet, View } from 'react-native';
-import { DotlottieReactNativeView } from 'dotlottie-react-native';
+import { Button, StyleSheet, View } from 'react-native';
+import { DotLottie, type Dotlottie } from 'dotlottie-react-native';
+import { useRef } from 'react';
 
 export default function App() {
+  const ref = useRef<Dotlottie>(null);
+
   return (
     <View style={styles.container}>
-      <DotlottieReactNativeView
-        source="https://lottie.host/3a34a38a-e52f-486f-8709-3063f9d18af9/1tzAlg30dp.json"
+      <DotLottie
+        ref={ref}
+        source="https://lottie.host/80de4a37-cdb8-4b91-b864-6428bb13f468/WINl04NyRy.json"
         style={styles.box}
-        loop={false}
+        loop={true}
         autoplay={false}
       />
+      <Button title="Play" onPress={() => ref.current?.play()} />
+      <Button title="Pause" onPress={() => ref.current?.pause()} />
+      <Button title="Stop" onPress={() => ref.current?.stop()} />
     </View>
   );
 }
