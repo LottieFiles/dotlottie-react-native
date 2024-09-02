@@ -1,5 +1,5 @@
 import { Button, StyleSheet, View } from 'react-native';
-import { DotLottie, type Dotlottie } from 'dotlottie-react-native';
+import { DotLottie, Mode, type Dotlottie } from 'dotlottie-react-native';
 import { useRef } from 'react';
 
 export default function App() {
@@ -9,14 +9,24 @@ export default function App() {
     <View style={styles.container}>
       <DotLottie
         ref={ref}
-        source="https://lottie.host/80de4a37-cdb8-4b91-b864-6428bb13f468/WINl04NyRy.json"
+        source={require('../assets/animation.lottie')}
         style={styles.box}
-        loop={true}
+        loop={false}
         autoplay={false}
       />
       <Button title="Play" onPress={() => ref.current?.play()} />
       <Button title="Pause" onPress={() => ref.current?.pause()} />
       <Button title="Stop" onPress={() => ref.current?.stop()} />
+      <Button title="Loop" onPress={() => ref.current?.setLoop(true)} />
+      <Button title="Speed" onPress={() => ref.current?.setSpeed(1)} />
+      <Button
+        title="FORWARD"
+        onPress={() => ref.current?.setPlayMode(Mode.FORWARD)}
+      />
+      <Button
+        title="REVERSE"
+        onPress={() => ref.current?.setPlayMode(Mode.REVERSE)}
+      />
     </View>
   );
 }
