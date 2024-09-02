@@ -40,6 +40,18 @@ interface DotlottieReactNativeProps {
   speed?: number;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
+  onLoad?: () => void;
+  onComplete?: () => void;
+  onLoadError?: () => void;
+  onPlay?: () => void;
+  onLoop?: () => void;
+  onDestroy?: () => void;
+  onUnFreeze?: () => void;
+  onFreeze?: () => void;
+  onPause?: () => void;
+  onFrame?: () => void;
+  onStop?: () => void;
+  onRender?: () => void;
 }
 
 const COMMAND_PLAY = 'play';
@@ -55,8 +67,6 @@ const COMMAND_UNFREEZE = 'unfreeze';
 const ComponentName = 'DotlottieReactNativeView';
 
 const NativeViewManager = UIManager.getViewManagerConfig(ComponentName);
-
-console.log('NativeViewManager.Commands', NativeViewManager.Commands);
 
 const DotlottieReactNativeView =
   UIManager.getViewManagerConfig(ComponentName) != null

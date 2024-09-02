@@ -1,30 +1,17 @@
 package com.dotlottiereactnative
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.ComposeView
 import com.dotlottie.dlplayer.Mode
-import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.lottiefiles.dotlottie.core.compose.runtime.DotLottieController
-import com.lottiefiles.dotlottie.core.compose.ui.DotLottieAnimation
-import com.lottiefiles.dotlottie.core.util.DotLottieSource
 
-class DotlottieReactNativeViewManager : SimpleViewManager<ComposeView>() {
-
-  private var animationUrl: String? = null
-  private var loop: Boolean = false
-  private var autoplay: Boolean = true
-  private var speed: Float = 1f
-  private var dotLottieController: DotLottieController = DotLottieController()
+class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeView>() {
 
   override fun getName() = "DotlottieReactNativeView"
 
-  override fun createViewInstance(reactContext: ThemedReactContext): ComposeView {
-    return ComposeView(reactContext).apply { setContent { DotLottieContent() } }
+  override fun createViewInstance(reactContext: ThemedReactContext): DotlottieReactNativeView {
+    return DotlottieReactNativeView(reactContext)
   }
 
   override fun getCommandsMap(): MutableMap<String, Int> {
@@ -41,106 +28,77 @@ class DotlottieReactNativeViewManager : SimpleViewManager<ComposeView>() {
     )
   }
 
-  override fun receiveCommand(root: ComposeView, commandId: Int, args: ReadableArray?) {
+  override fun getExportedCustomBubblingEventTypeConstants(): Map<String, Any> {
+    return getEventTypeConstants(
+            "onLoad",
+            "onComplete",
+            "onLoadError",
+            "onPlay",
+            "onLoop",
+            "onDestroy",
+            "onUnFreeze",
+            "onFreeze",
+            "onPause",
+            "onFrame",
+            "onStop",
+            "onRender",
+            "onLoop"
+    )
+  }
 
-    // play()	Starts or resumes the animation.
-    // pause()	Pauses the animation.
-    // stop()	Stops the animation and resets to the beginning.
-    // setPlayerInstance(player: DotLottiePlayer)	Sets the DotLottiePlayer instance to be
-    // controlled.
-    // resize(width: UInt, height: UInt)	Resizes the animation view.
-    // setFrame(frame: Float)	Sets the current frame of the animation.
-    // setUseFrameInterpolation(enable: Boolean)	Enables or disables frame interpolation.
-    // setSegments(firstFrame: Float, lastFrame: Float)	Defines the start and end frames for a
-    // segment of the animation to play.
-    // setLoop(loop: Boolean)	Sets whether the animation should loop.
-    // freeze()	Freezes the animation at the current frame.
-    // unFreeze()	Unfreezes the animation, allowing it to continue.
-    // setSpeed(speed: Float)	Sets the playback speed of the animation.
-    // setPlayMode(mode: Mode)	Sets the play mode of the animation.
-    // addEventListener(listener: DotLottieEventListener)	Adds an event listener to receive
-    // animation events.
-    // removeEventListener(listener: DotLottieEventListener)	Removes an event listener.
-    // loadStateMachine(stateMachineId: String): Boolean	Loads a specific state machine.
-    // startStateMachine(): Boolean	Removes an event listener.
-    // stopStateMachine(): Boolean	Stops the state machine.
-    // postEvent(event: Event): Boolean	Triggers state machine events.
-    // addStateMachineEventListener(listener: StateMachineEventListener)	Listen to state machine
-    // transition events.
-    // removeStateMachineEventListener(listener: StateMachineEventListener
-    if (commandId == COMMAND_PLAY_ID) dotLottieController.play()
-    if (commandId == COMMAND_PAUSE_ID) dotLottieController.pause()
-    if (commandId == COMMAND_STOP_ID) dotLottieController.stop()
+  override fun receiveCommand(
+          view: DotlottieReactNativeView,
+          commandId: Int,
+          args: ReadableArray?
+  ) {
+
+    if (commandId == COMMAND_PLAY_ID) view.dotLottieController.play()
+    if (commandId == COMMAND_PAUSE_ID) view.dotLottieController.pause()
+    if (commandId == COMMAND_STOP_ID) view.dotLottieController.stop()
     if (commandId == COMMAND_SET_SPEED_ID) {
       val speed = args?.getDouble(0)?.toFloat() ?: 1f
-      dotLottieController.setSpeed(speed)
+      view.dotLottieController.setSpeed(speed)
     }
     if (commandId == COMMAND_FREEZE_ID) {
-      dotLottieController.freeze()
+      view.dotLottieController.freeze()
     }
     if (commandId == COMMAND_UNFREEZE_ID) {
-      dotLottieController.unFreeze()
+      view.dotLottieController.unFreeze()
     }
     if (commandId == COMMAND_SET_LOOP_ID) {
       val loop = args?.getBoolean(0) ?: false
-      dotLottieController.setLoop(loop)
+      view.dotLottieController.setLoop(loop)
     }
 
     if (commandId == COMMAND_SET_FRAME_ID) {
       val frame = args?.getDouble(0)?.toFloat() ?: 0f
-      dotLottieController.setFrame(frame)
+      view.dotLottieController.setFrame(frame)
     }
     if (commandId == COMMAND_SET_PLAY_MODE_ID) {
       val mode = args?.getInt(0)
       val modeValue = Mode.values()[mode ?: 0]
-      dotLottieController.setPlayMode(modeValue)
+      view.dotLottieController.setPlayMode(modeValue)
     }
-  }
-
-  @Composable
-  fun DotLottieContent() {
-    dotLottieController = remember { DotLottieController() }
-
-    animationUrl?.let { url ->
-      DotLottieAnimation(
-              source = DotLottieSource.Url(url),
-              autoplay = autoplay,
-              loop = loop,
-              speed = speed,
-              controller = dotLottieController,
-      )
-    }
-  }
-
-  @ReactMethod
-  fun setProgress(value: Boolean) {
-
-    dotLottieController.setLoop(value)
   }
 
   @ReactProp(name = "source")
-  fun setSource(view: ComposeView, url: String?) {
-    // Update the URL and re-compose the view
-    animationUrl = url
-    view.setContent { DotLottieContent() }
+  fun setSource(view: DotlottieReactNativeView, url: String?) {
+    view.setSource(url)
   }
 
   @ReactProp(name = "loop")
-  fun setLoop(view: ComposeView, value: Boolean) {
-    loop = value
-    view.setContent { DotLottieContent() }
+  fun setLoop(view: DotlottieReactNativeView, value: Boolean) {
+    view.setLoop(value)
   }
 
   @ReactProp(name = "autoplay")
-  fun setAutoPlay(view: ComposeView, value: Boolean) {
-    autoplay = value
-    view.setContent { DotLottieContent() }
+  fun setAutoPlay(view: DotlottieReactNativeView, value: Boolean) {
+    view.setAutoPlay(value)
   }
 
   @ReactProp(name = "speed")
-  fun setSpeed(view: ComposeView, value: Double) {
-    speed = value.toFloat()
-    view.setContent { DotLottieContent() }
+  fun setSpeed(view: DotlottieReactNativeView, value: Double) {
+    view.setSpeed(value)
   }
 
   companion object {

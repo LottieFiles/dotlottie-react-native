@@ -13,6 +13,9 @@ export default function App() {
         style={styles.box}
         loop={false}
         autoplay={false}
+        onPlay={() => console.log('onPlay')}
+        onPause={() => console.log('onPause')}
+        onStop={() => console.log('onStop')}
       />
       <Button title="Play" onPress={() => ref.current?.play()} />
       <Button title="Pause" onPress={() => ref.current?.pause()} />
