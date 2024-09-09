@@ -16,6 +16,8 @@ export default function App() {
         onPlay={() => console.log('onPlay')}
         onPause={() => console.log('onPause')}
         onStop={() => console.log('onStop')}
+        onTransition={(event) => console.log('onTransitionEnd', event)}
+        onStateEntered={(event) => console.log('onStateEntered', event)}
       />
       <Button title="Play" onPress={() => ref.current?.play()} />
       <Button title="Pause" onPress={() => ref.current?.pause()} />
@@ -29,6 +31,24 @@ export default function App() {
       <Button
         title="REVERSE"
         onPress={() => ref.current?.setPlayMode(Mode.REVERSE)}
+      />
+      <Button
+        title="START_STATE_MACHINE"
+        onPress={() => ref.current?.setStartStateMachine()}
+      />
+
+      <Button
+        title="ADD_STATE_MACHINE"
+        onPress={() => ref.current?.setAddStateMachineEventListener()}
+      />
+      <Button
+        title="REMOVE_STATE_MACHINE"
+        onPress={() => ref.current?.setRemoveStateMachineEventListener()}
+      />
+
+      <Button
+        title="STOP_STATE_MACHINE"
+        onPress={() => ref.current?.setStopStateMachine()}
       />
     </View>
   );

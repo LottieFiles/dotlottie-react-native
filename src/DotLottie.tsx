@@ -31,6 +31,18 @@ export type Dotlottie = {
   setFrame: (frame: number) => void;
   freeze: () => void;
   unfreeze: () => void;
+  setStartStateMachine: () => void;
+  setStopStateMachine: () => void;
+  setLoadStateMachine: (stateMachineId: string) => void;
+  setPostEvent: (event: string) => void;
+  setAddStateMachineEventListener: () => void;
+  setRemoveStateMachineEventListener: () => void;
+  setResize: (width: number, height: number) => void;
+  setSegment: (start: number, end: number) => void;
+  setMarker: (marker: string) => void;
+  loadTheme: (themeId: string) => void;
+  loadAnimation: (animationId: string) => void;
+  setManifest: () => void;
 };
 
 interface DotlottieReactNativeProps {
@@ -38,6 +50,10 @@ interface DotlottieReactNativeProps {
   loop?: boolean;
   autoplay?: boolean;
   speed?: number;
+  themeId?: string;
+  marker?: string;
+  segment?: number[];
+  playMode?: Mode;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;
@@ -52,6 +68,9 @@ interface DotlottieReactNativeProps {
   onFrame?: () => void;
   onStop?: () => void;
   onRender?: () => void;
+  onTransition?: (state: { previousState: string; newState: string }) => void;
+  onStateExit?: (state: { leavingState: string }) => void;
+  onStateEntered?: (state: { enteringState: string }) => void;
 }
 
 const COMMAND_PLAY = 'play';
@@ -63,6 +82,20 @@ const COMMAND_SET_PLAY_MODE = 'setPlayMode';
 const COMMAND_SET_FRAME = 'setFrame';
 const COMMAND_FREEZE = 'freeze';
 const COMMAND_UNFREEZE = 'unfreeze';
+const COMMAND_SET_START_STATE_MACHINE = 'startStateMachine';
+const COMMAND_SET_STOP_STATE_MACHINE = 'stopStateMachine';
+const COMMAND_SET_LOAD_STATE_MACHINE = 'loadStateMachine';
+const COMMAND_SET_POST_EVENT = 'postEvent';
+const COMMAND_SET_ADD_STATE_MACHINE_EVENT_LISTENER =
+  'addStateMachineEventListener';
+const COMMAND_SET_REMOVE_STATE_MACHINE_EVENT_LISTENER =
+  'removeStateMachineEventListener';
+const COMMAND_SET_RESIZE = 'resize';
+const COMMAND_SET_SEGMENT = 'setSegment';
+const COMMAND_SET_MARKER = 'setMarker';
+const COMMAND_SET_LOAD_THEME = 'loadTheme';
+const COMMAND_SET_LOAD_ANIMATION = 'loadAnimation';
+const COMMAND_SET_MANIFEST = 'manifest';
 
 const ComponentName = 'DotlottieReactNativeView';
 
@@ -178,6 +211,156 @@ export const DotLottie = forwardRef(
       }
     }, []);
 
+    const setSegmentWithUIManager = useCallback(
+      (start: number, end: number) => {
+        const command = NativeViewManager.Commands[COMMAND_SET_SEGMENT];
+        if (command) {
+          return UIManager.dispatchViewManagerCommand(
+            findNodeHandle(nativeRef.current),
+            command,
+            [start, end]
+          );
+        }
+      },
+      []
+    );
+
+    const setStartStateMachineWithUIManager = useCallback(() => {
+      const command =
+        NativeViewManager.Commands[COMMAND_SET_START_STATE_MACHINE];
+      if (command) {
+        return UIManager.dispatchViewManagerCommand(
+          findNodeHandle(nativeRef.current),
+          command,
+          []
+        );
+      }
+    }, []);
+
+    const setStopStateMachineWithUIManager = useCallback(() => {
+      const command =
+        NativeViewManager.Commands[COMMAND_SET_STOP_STATE_MACHINE];
+      if (command) {
+        return UIManager.dispatchViewManagerCommand(
+          findNodeHandle(nativeRef.current),
+          command,
+          []
+        );
+      }
+    }, []);
+
+    const setLoadStateMachineWithUIManager = useCallback(
+      (stateMachineId: string) => {
+        const command =
+          NativeViewManager.Commands[COMMAND_SET_LOAD_STATE_MACHINE];
+        if (command) {
+          return UIManager.dispatchViewManagerCommand(
+            findNodeHandle(nativeRef.current),
+            command,
+            [stateMachineId]
+          );
+        }
+      },
+      []
+    );
+
+    const setPostEventWithUIManager = useCallback((event: string) => {
+      const command = NativeViewManager.Commands[COMMAND_SET_POST_EVENT];
+      if (command) {
+        return UIManager.dispatchViewManagerCommand(
+          findNodeHandle(nativeRef.current),
+          command,
+          [event]
+        );
+      }
+    }, []);
+
+    const setAddStateMachineEventListenerWithUIManager = useCallback(() => {
+      const command =
+        NativeViewManager.Commands[
+          COMMAND_SET_ADD_STATE_MACHINE_EVENT_LISTENER
+        ];
+      if (command) {
+        return UIManager.dispatchViewManagerCommand(
+          findNodeHandle(nativeRef.current),
+          command,
+          []
+        );
+      }
+    }, []);
+
+    const setRemoveStateMachineEventListenerWithUIManager = useCallback(() => {
+      const command =
+        NativeViewManager.Commands[
+          COMMAND_SET_REMOVE_STATE_MACHINE_EVENT_LISTENER
+        ];
+      if (command) {
+        return UIManager.dispatchViewManagerCommand(
+          findNodeHandle(nativeRef.current),
+          command,
+          []
+        );
+      }
+    }, []);
+
+    const setResizeWithUIManager = useCallback(
+      (width: number, height: number) => {
+        const command = NativeViewManager.Commands[COMMAND_SET_RESIZE];
+        if (command) {
+          return UIManager.dispatchViewManagerCommand(
+            findNodeHandle(nativeRef.current),
+            command,
+            [width, height]
+          );
+        }
+      },
+      []
+    );
+
+    const setMarkerWithUIManager = useCallback((marker: string) => {
+      const command = NativeViewManager.Commands[COMMAND_SET_MARKER];
+      if (command) {
+        return UIManager.dispatchViewManagerCommand(
+          findNodeHandle(nativeRef.current),
+          command,
+          [marker]
+        );
+      }
+    }, []);
+
+    const loadThemeWithUIManager = useCallback((themeId: string) => {
+      const command = NativeViewManager.Commands[COMMAND_SET_LOAD_THEME];
+      if (command) {
+        return UIManager.dispatchViewManagerCommand(
+          findNodeHandle(nativeRef.current),
+          command,
+          [themeId]
+        );
+      }
+    }, []);
+
+    const loadAnimationWithUIManager = useCallback((animationId: string) => {
+      const command = NativeViewManager.Commands[COMMAND_SET_LOAD_ANIMATION];
+      if (command) {
+        return UIManager.dispatchViewManagerCommand(
+          findNodeHandle(nativeRef.current),
+          command,
+          [animationId]
+        );
+      }
+    }, []);
+
+    const setManifestWithUIManager = useCallback(() => {
+      const command = NativeViewManager.Commands[COMMAND_SET_MANIFEST];
+      if (command) {
+        return UIManager.dispatchViewManagerCommand(
+          findNodeHandle(nativeRef.current),
+          command,
+          []
+        );
+      }
+    }, []);
+
     useImperativeHandle(ref, () => ({
       play: playWithUIManager,
       pause: pauseWithUIManager,
@@ -188,6 +371,20 @@ export const DotLottie = forwardRef(
       setFrame: setFrameWithUIManager,
       freeze: freezeWithUIManager,
       unfreeze: unfreezeWithUIManager,
+      setStartStateMachine: setStartStateMachineWithUIManager,
+      setStopStateMachine: setStopStateMachineWithUIManager,
+      setLoadStateMachine: setLoadStateMachineWithUIManager,
+      setPostEvent: setPostEventWithUIManager,
+      setAddStateMachineEventListener:
+        setAddStateMachineEventListenerWithUIManager,
+      setRemoveStateMachineEventListener:
+        setRemoveStateMachineEventListenerWithUIManager,
+      setResize: setResizeWithUIManager,
+      setSegment: setSegmentWithUIManager,
+      setMarker: setMarkerWithUIManager,
+      loadTheme: loadThemeWithUIManager,
+      loadAnimation: loadAnimationWithUIManager,
+      setManifest: setManifestWithUIManager,
     }));
 
     const parsedSource = parseSource(source);
