@@ -14,7 +14,7 @@ export default function App() {
         }}
         style={styles.box}
         loop={false}
-        autoplay={false}
+        autoplay={true}
         onPlay={(a) => console.log('onPlay', a.nativeEvent)}
         onLoop={(a) => console.log('onLoop', a)}
         onPause={() => console.log('onPause')}
@@ -37,12 +37,12 @@ export default function App() {
       />
       <Button
         title="START_STATE_MACHINE"
-        onPress={() => ref.current?.startStateMachine()}
+        onPress={() => ref.current?.startStateMachine('pigeon_fsm')}
       />
 
       <Button
-        title="ADD_STATE_MACHINE"
-        onPress={() => ref.current?.addStateMachineEventListener()}
+        title="LOAD_STATE_MACHINE"
+        onPress={() => ref.current?.loadStateMachine('pigeon_fsm')}
       />
       <Button
         title="REMOVE_STATE_MACHINE"

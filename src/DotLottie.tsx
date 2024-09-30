@@ -31,7 +31,7 @@ export type Dotlottie = {
   setFrame: (frame: number) => void;
   freeze: () => void;
   unfreeze: () => void;
-  startStateMachine: () => void;
+  startStateMachine: (stateMachineId: string) => void;
   stopStateMachine: () => void;
   loadStateMachine: (stateMachineId: string) => void;
   setPostEvent: (event: string) => void;
@@ -225,17 +225,20 @@ export const DotLottie = forwardRef(
       []
     );
 
-    const startStateMachineWithUIManager = useCallback(() => {
-      const command =
-        NativeViewManager.Commands[COMMAND_SET_START_STATE_MACHINE];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          []
-        );
-      }
-    }, []);
+    const startStateMachineWithUIManager = useCallback(
+      (stateMachineId: string) => {
+        const command =
+          NativeViewManager.Commands[COMMAND_SET_START_STATE_MACHINE];
+        if (command) {
+          return UIManager.dispatchViewManagerCommand(
+            findNodeHandle(nativeRef.current),
+            command,
+            [stateMachineId]
+          );
+        }
+      },
+      []
+    );
 
     const stopStateMachineWithUIManager = useCallback(() => {
       const command =

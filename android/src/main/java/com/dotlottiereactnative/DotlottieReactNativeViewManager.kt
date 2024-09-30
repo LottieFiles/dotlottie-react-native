@@ -100,7 +100,11 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
     }
 
     if (commandId == COMMAND_START_STATE_MACHINE_ID) {
-      view.dotLottieController.startStateMachine()
+      val stateMachineId = args?.getString(0) ?: ""
+      val result = view.dotLottieController.loadStateMachine(stateMachineId)
+      if (result) {
+        view.dotLottieController.startStateMachine()
+      }
     }
 
     if (commandId == COMMAND_STOP_STATE_MACHINE_ID) {
@@ -116,15 +120,6 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
       val event = args?.getString(0) ?: ""
       view.postEvent(event)
     }
-
-    if (commandId == COMMAND_ADD_STATE_MACHINE_EVENT_LISTENER_ID) {
-      view.addStateMachineEventListener()
-    }
-
-    if (commandId == COMMAND_REMOVE_STATE_MACHINE_EVENT_LISTENER_ID) {
-      view.removeStateMachineEventListener()
-    }
-
     if (commandId == COMMAND_RESIZE_ID) {
       val width = args?.getDouble(0)?.toUInt() ?: 0u
       val height = args?.getDouble(1)?.toUInt() ?: 0u

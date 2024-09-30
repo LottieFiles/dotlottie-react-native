@@ -2,6 +2,7 @@ package com.dotlottiereactnative
 
 import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import com.dotlottie.dlplayer.Event
@@ -31,28 +32,6 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var playMode: Mode = Mode.FORWARD
   var dotLottieController: DotLottieController = DotLottieController()
 
-  val stateListener =
-          object : StateMachineEventListener {
-            override fun onTransition(previousState: String, newState: String) {
-              val value =
-                      Arguments.createMap().apply {
-                        putString("previousState", previousState)
-                        putString("newState", newState)
-                      }
-              onReceiveNativeEvent("onTransition", value)
-            }
-
-            override fun onStateExit(leavingState: String) {
-              val value = Arguments.createMap().apply { putString("leavingState", leavingState) }
-              onReceiveNativeEvent("onStateExit", value)
-            }
-
-            override fun onStateEntered(enteringState: String) {
-              val value = Arguments.createMap().apply { putString("enteringState", enteringState) }
-              onReceiveNativeEvent("onStateEntered", value)
-            }
-          }
-
   private val composeView: ComposeView =
           ComposeView(context).apply {
             layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -72,6 +51,33 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   @Composable
   fun DotLottieContent() {
     dotLottieController = remember { DotLottieController() }
+
+    val stateListener = remember {
+      object : StateMachineEventListener {
+        override fun onTransition(previousState: String, newState: String) {
+          val value =
+                  Arguments.createMap().apply {
+                    putString("previousState", previousState)
+                    putString("newState", newState)
+                  }
+
+          onReceiveNativeEvent("onTransition", value)
+        }
+
+        override fun onStateExit(leavingState: String) {
+          val value = Arguments.createMap().apply { putString("leavingState", leavingState) }
+          onReceiveNativeEvent("onStateExit", value)
+        }
+
+        override fun onStateEntered(enteringState: String) {
+          val value = Arguments.createMap().apply { putString("enteringState", enteringState) }
+          println("enteringState")
+          onReceiveNativeEvent("onStateEntered", value)
+        }
+      }
+    }
+
+    LaunchedEffect(UInt) { dotLottieController.addStateMachineEventListener(stateListener) }
 
     animationUrl?.let { url ->
       DotLottieAnimation(
@@ -161,14 +167,6 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   fun setSegment(start: Double, end: Double) {
     segment = Pair(start.toFloat(), end.toFloat())
     composeView.setContent { DotLottieContent() }
-  }
-
-  fun addStateMachineEventListener() {
-    dotLottieController.addStateMachineEventListener(stateListener)
-  }
-
-  fun removeStateMachineEventListener() {
-    dotLottieController.removeStateMachineEventListener(stateListener)
   }
 
   fun postEvent(event: String) {
