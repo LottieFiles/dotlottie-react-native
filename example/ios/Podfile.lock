@@ -1,6 +1,8 @@
 PODS:
   - boost (1.83.0)
+  - dotLottie-iOS (0.6.2)
   - dotlottie-react-native (0.1.0):
+    - dotLottie-iOS
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1249,6 +1251,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - dotLottie-iOS
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -1366,7 +1369,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
-  dotlottie-react-native: 09dd155dda0544da366afb84db1dd5b46d57bd48
+  dotLottie-iOS: ccb084a8bf007154d7c6f81e5a854f9a0eef48d4
+  dotlottie-react-native: 85605b09664893227775eb17f41776032dbb5ba0
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   FBLazyVector: ac12dc084d1c8ec4cc4d7b3cf1b0ebda6dab85af
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
@@ -1422,6 +1426,6 @@ SPEC CHECKSUMS:
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 950bbfd7e6f04790fdb51149ed51df41f329fcc8
 
-PODFILE CHECKSUM: 139b78530aeefde1370c31df3d28b2243b55ec40
+PODFILE CHECKSUM: 4a9daf08dfcda3ac66e0b9e1e6316e5fc85ee0e2
 
 COCOAPODS: 1.15.2

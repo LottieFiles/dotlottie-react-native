@@ -9,11 +9,14 @@ export default function App() {
     <View style={styles.container}>
       <DotLottie
         ref={ref}
-        source={require('../assets/animation.lottie')}
+        source={{
+          uri: 'https://lottie.host/3a34a38a-e52f-486f-8709-3063f9d18af9/1tzAlg30dp.json',
+        }}
         style={styles.box}
         loop={false}
         autoplay={false}
-        onPlay={() => console.log('onPlay')}
+        onPlay={(a) => console.log('onPlay', a.nativeEvent)}
+        onLoop={(a) => console.log('onLoop', a)}
         onPause={() => console.log('onPause')}
         onStop={() => console.log('onStop')}
         onTransition={(event) => console.log('onTransitionEnd', event)}
@@ -34,21 +37,21 @@ export default function App() {
       />
       <Button
         title="START_STATE_MACHINE"
-        onPress={() => ref.current?.setStartStateMachine()}
+        onPress={() => ref.current?.startStateMachine()}
       />
 
       <Button
         title="ADD_STATE_MACHINE"
-        onPress={() => ref.current?.setAddStateMachineEventListener()}
+        onPress={() => ref.current?.addStateMachineEventListener()}
       />
       <Button
         title="REMOVE_STATE_MACHINE"
-        onPress={() => ref.current?.setRemoveStateMachineEventListener()}
+        onPress={() => ref.current?.removeStateMachineEventListener()}
       />
 
       <Button
         title="STOP_STATE_MACHINE"
-        onPress={() => ref.current?.setStopStateMachine()}
+        onPress={() => ref.current?.stopStateMachine()}
       />
     </View>
   );

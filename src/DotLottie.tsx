@@ -31,13 +31,13 @@ export type Dotlottie = {
   setFrame: (frame: number) => void;
   freeze: () => void;
   unfreeze: () => void;
-  setStartStateMachine: () => void;
-  setStopStateMachine: () => void;
-  setLoadStateMachine: (stateMachineId: string) => void;
+  startStateMachine: () => void;
+  stopStateMachine: () => void;
+  loadStateMachine: (stateMachineId: string) => void;
   setPostEvent: (event: string) => void;
-  setAddStateMachineEventListener: () => void;
-  setRemoveStateMachineEventListener: () => void;
-  setResize: (width: number, height: number) => void;
+  addStateMachineEventListener: () => void;
+  removeStateMachineEventListener: () => void;
+  resize: (width: number, height: number) => void;
   setSegment: (start: number, end: number) => void;
   setMarker: (marker: string) => void;
   loadTheme: (themeId: string) => void;
@@ -59,8 +59,8 @@ interface DotlottieReactNativeProps {
   onLoad?: () => void;
   onComplete?: () => void;
   onLoadError?: () => void;
-  onPlay?: () => void;
-  onLoop?: () => void;
+  onPlay?: (e: any) => void;
+  onLoop?: (e: any) => void;
   onDestroy?: () => void;
   onUnFreeze?: () => void;
   onFreeze?: () => void;
@@ -225,7 +225,7 @@ export const DotLottie = forwardRef(
       []
     );
 
-    const setStartStateMachineWithUIManager = useCallback(() => {
+    const startStateMachineWithUIManager = useCallback(() => {
       const command =
         NativeViewManager.Commands[COMMAND_SET_START_STATE_MACHINE];
       if (command) {
@@ -237,7 +237,7 @@ export const DotLottie = forwardRef(
       }
     }, []);
 
-    const setStopStateMachineWithUIManager = useCallback(() => {
+    const stopStateMachineWithUIManager = useCallback(() => {
       const command =
         NativeViewManager.Commands[COMMAND_SET_STOP_STATE_MACHINE];
       if (command) {
@@ -249,7 +249,7 @@ export const DotLottie = forwardRef(
       }
     }, []);
 
-    const setLoadStateMachineWithUIManager = useCallback(
+    const loadStateMachineWithUIManager = useCallback(
       (stateMachineId: string) => {
         const command =
           NativeViewManager.Commands[COMMAND_SET_LOAD_STATE_MACHINE];
@@ -275,7 +275,7 @@ export const DotLottie = forwardRef(
       }
     }, []);
 
-    const setAddStateMachineEventListenerWithUIManager = useCallback(() => {
+    const addStateMachineEventListenerWithUIManager = useCallback(() => {
       const command =
         NativeViewManager.Commands[
           COMMAND_SET_ADD_STATE_MACHINE_EVENT_LISTENER
@@ -289,7 +289,7 @@ export const DotLottie = forwardRef(
       }
     }, []);
 
-    const setRemoveStateMachineEventListenerWithUIManager = useCallback(() => {
+    const removeStateMachineEventListenerWithUIManager = useCallback(() => {
       const command =
         NativeViewManager.Commands[
           COMMAND_SET_REMOVE_STATE_MACHINE_EVENT_LISTENER
@@ -303,19 +303,16 @@ export const DotLottie = forwardRef(
       }
     }, []);
 
-    const setResizeWithUIManager = useCallback(
-      (width: number, height: number) => {
-        const command = NativeViewManager.Commands[COMMAND_SET_RESIZE];
-        if (command) {
-          return UIManager.dispatchViewManagerCommand(
-            findNodeHandle(nativeRef.current),
-            command,
-            [width, height]
-          );
-        }
-      },
-      []
-    );
+    const resizeWithUIManager = useCallback((width: number, height: number) => {
+      const command = NativeViewManager.Commands[COMMAND_SET_RESIZE];
+      if (command) {
+        return UIManager.dispatchViewManagerCommand(
+          findNodeHandle(nativeRef.current),
+          command,
+          [width, height]
+        );
+      }
+    }, []);
 
     const setMarkerWithUIManager = useCallback((marker: string) => {
       const command = NativeViewManager.Commands[COMMAND_SET_MARKER];
@@ -371,15 +368,14 @@ export const DotLottie = forwardRef(
       setFrame: setFrameWithUIManager,
       freeze: freezeWithUIManager,
       unfreeze: unfreezeWithUIManager,
-      setStartStateMachine: setStartStateMachineWithUIManager,
-      setStopStateMachine: setStopStateMachineWithUIManager,
-      setLoadStateMachine: setLoadStateMachineWithUIManager,
+      startStateMachine: startStateMachineWithUIManager,
+      stopStateMachine: stopStateMachineWithUIManager,
+      loadStateMachine: loadStateMachineWithUIManager,
       setPostEvent: setPostEventWithUIManager,
-      setAddStateMachineEventListener:
-        setAddStateMachineEventListenerWithUIManager,
-      setRemoveStateMachineEventListener:
-        setRemoveStateMachineEventListenerWithUIManager,
-      setResize: setResizeWithUIManager,
+      addStateMachineEventListener: addStateMachineEventListenerWithUIManager,
+      removeStateMachineEventListener:
+        removeStateMachineEventListenerWithUIManager,
+      resize: resizeWithUIManager,
       setSegment: setSegmentWithUIManager,
       setMarker: setMarkerWithUIManager,
       loadTheme: loadThemeWithUIManager,
@@ -388,6 +384,7 @@ export const DotLottie = forwardRef(
     }));
 
     const parsedSource = parseSource(source);
+
     return (
       <DotlottieReactNativeView
         ref={nativeRef}
