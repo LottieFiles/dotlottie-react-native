@@ -13,7 +13,7 @@ export default function App() {
           uri: 'https://lottie.host/3a34a38a-e52f-486f-8709-3063f9d18af9/1tzAlg30dp.json',
         }}
         style={styles.box}
-        loop={false}
+        loop={true}
         autoplay={true}
         onPlay={(a) => console.log('onPlay', a.nativeEvent)}
         onLoop={(a) => console.log('onLoop', a)}
@@ -27,6 +27,7 @@ export default function App() {
       <Button title="Stop" onPress={() => ref.current?.stop()} />
       <Button title="Loop" onPress={() => ref.current?.setLoop(true)} />
       <Button title="Speed" onPress={() => ref.current?.setSpeed(1)} />
+
       <Button
         title="FORWARD"
         onPress={() => ref.current?.setPlayMode(Mode.FORWARD)}
