@@ -76,7 +76,7 @@ interface DotlottieReactNativeProps {
 const COMMAND_PLAY = 'play';
 const COMMAND_PAUSE = 'pause';
 const COMMAND_STOP = 'stop';
-const COMMAND_SET_LOOP = 'setLoop';
+const COMMAND_SET_LOOP = 'loop';
 const COMMAND_SET_SPEED = 'setSpeed';
 const COMMAND_SET_PLAY_MODE = 'setPlayMode';
 const COMMAND_SET_FRAME = 'setFrame';
@@ -115,7 +115,7 @@ export const DotLottie = forwardRef(
     const playWithUIManager = useCallback(() => {
       const command = NativeViewManager.Commands[COMMAND_PLAY];
       if (command) {
-        return UIManager.dispatchViewManagerCommand(
+        UIManager.dispatchViewManagerCommand(
           findNodeHandle(nativeRef.current),
           command,
           []
