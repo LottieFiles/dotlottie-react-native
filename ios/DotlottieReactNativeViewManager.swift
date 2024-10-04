@@ -3,13 +3,24 @@ import SwiftUI
 
 
  class Datastore: ObservableObject {
-  @Published var source: NSString = ""
+   @Published var source: NSString = ""
   @Published var loop: Bool = false
   @Published var autoplay: Bool = true
   @Published var onPlay: RCTBubblingEventBlock = {_ in }
   @Published var onLoad: RCTBubblingEventBlock = {_ in }
   @Published var onLoadError: RCTBubblingEventBlock = {_ in }
   @Published var onLoop: RCTBubblingEventBlock = {_ in }
+   
+  @Published var animation: DotLottieAnimation?
+   
+   func createAnimation() {
+     if(self.source != ""){
+       self.animation = DotLottieAnimation(
+        webURL: source as String,
+        config: AnimationConfig(autoplay: autoplay, loop: loop, speed: 2)
+       )
+     }
+   }
 }
 
 
@@ -36,8 +47,7 @@ class YourDotLottieObserver: Observer {
     }
 
     func onLoop(loopCount: UInt32) {
-        dataStore.onLoop(["loopCount" :
-                         ])
+      dataStore.onLoop(["loopCount" : loopCount])
     }
 
     func onPause() {
@@ -61,21 +71,30 @@ class YourDotLottieObserver: Observer {
 
 struct AnimationView: View {
     @EnvironmentObject var dataStore: Datastore
-    var animation: DotLottieAnimation
+  
 
     var body: some View {
-        DotLottieView(dotLottie: animation)
-                    .onAppear {
-                        subscribeToAnimation()
+      if let animation = dataStore.animation {
+                  DotLottieView(dotLottie: animation)
+                      .onAppear {
+                          subscribeToAnimation()
+                      }
+              } else {
+                  Text("Loading animation...")
+                      .onAppear {
+                          dataStore.createAnimation()
+                      }
+              }
     }
-    }
+  
+
     
   func subscribeToAnimation() {
-      let animationView = DotLottieView(dotLottie: animation)
-      let myObserver = YourDotLottieObserver(dataStore: dataStore)
-      animationView.subscribe(observer: myObserver)
-  }
-
+          guard let animation = dataStore.animation else { return }
+          let animationView = DotLottieView(dotLottie: animation)
+          let myObserver = YourDotLottieObserver(dataStore: dataStore)
+          animationView.subscribe(observer: myObserver)
+      }
 }
 
 
@@ -90,28 +109,30 @@ class DotlottieReactNativeViewManager: RCTViewManager {
   
   
   
-  @objc func pause(_ node:NSNumber) {
+  @objc
+  func pause(_ node:NSNumber) {
     DispatchQueue.main.async {
       print("Pause")
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      dotLottieView._animation?.pause()
+      _ = dotLottieView._animation?.pause()
     }
   }
   
-  @objc func stop(_ node:NSNumber) {
+  @objc
+  func stop(_ node:NSNumber) {
     DispatchQueue.main.async {
-      
       print("Stop")
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      dotLottieView._animation?.stop()
+      _ = dotLottieView._animation?.stop()
     }
   }
   
-  @objc func play(_ node:NSNumber) {
+  @objc
+  func play(_ node:NSNumber) {
       DispatchQueue.main.async {
         print("Play")
         let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-        dotLottieView._animation?.play()
+        _ = dotLottieView._animation?.play()
         
       }
     }
@@ -121,11 +142,60 @@ class DotlottieReactNativeViewManager: RCTViewManager {
     DispatchQueue.main.async {
       print("Loop")
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      dotLottieView._animation?.setLoop(loop: loop)
-      
-      
+      _ = dotLottieView._animation?.setLoop(loop: loop)
     }
   }
+  
+  @objc func setSpeed(_ node:NSNumber, speed:NSNumber) {
+    DispatchQueue.main.async {
+      let convertedSpeed = Float(truncating: speed)
+      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      _ = dotLottieView._animation?.setSpeed(speed: convertedSpeed)
+    }
+  }
+  
+  @objc func setFrame(_ node:NSNumber, frame:NSNumber) {
+    DispatchQueue.main.async {
+      let convertedFrame = Float(truncating: frame)
+      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      _ = dotLottieView._animation?.setFrame(frame: convertedFrame)
+    }
+  }
+  
+  @objc func setPlayMode(_ node:NSNumber, mode:NSNumber) {
+    DispatchQueue.main.async {
+      
+      let actualMode: Mode = {
+        switch mode {
+        case 0: return .forward
+        case 1: return .reverse
+        case 2: return .bounce
+        case 3: return .reverseBounce
+        default:
+          return .forward
+        }
+      }()
+      
+      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      _ = dotLottieView._animation?.setMode(mode: actualMode)
+    }
+  }
+  
+  @objc func setMarker(_ node:NSNumber, marker:NSString) {
+    DispatchQueue.main.async {
+      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      _ = dotLottieView._animation?.setMarker(marker: String(marker))
+    }
+  }
+  
+  @objc func resize(_ node:NSNumber, width:NSNumber, height:NSNumber) {
+    DispatchQueue.main.async {
+      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      _ = dotLottieView._animation?.resize(width: Int(truncating: width), height: Int(truncating: height))
+    }
+  }
+  
+  
   
  
   @objc override static func requiresMainQueueSetup() -> Bool {
@@ -137,20 +207,24 @@ class DotlottieReactNativeViewManager: RCTViewManager {
 class DotlottieReactNativeView: UIView {
     var view: UIView?
     var dataStore:Datastore  = .init()
-    var _animation: DotLottieAnimation? = nil
+    var _animation: DotLottieAnimation? {
+         dataStore.animation
+     }
 
 
     override init(frame: CGRect) {
       super.init(frame: frame)
-      let animation = createAnimation()
-      _animation = animation
-      let vc = UIHostingController(rootView: AnimationView(animation: animation).environmentObject(dataStore))
-      vc.view.frame = bounds
-      self.addSubview(vc.view)
-      self.view = vc.view
-      
-    
+      self.createAnimation()
     }
+  
+  func createAnimation() {
+    dataStore.createAnimation()
+    let vc = UIHostingController(rootView: AnimationView().environmentObject(dataStore))
+    vc.view.frame = bounds
+    self.addSubview(vc.view)
+    self.view = vc.view
+
+  }
   
 
 
@@ -159,39 +233,25 @@ class DotlottieReactNativeView: UIView {
     }
   
    
-  
-  
-  func createAnimation() -> DotLottieAnimation {
-        let animation = DotLottieAnimation(
-            webURL: "https://lottie.host/3a34a38a-e52f-486f-8709-3063f9d18af9/1tzAlg30dp.json",
-            config: AnimationConfig(autoplay: dataStore.autoplay, loop: dataStore.loop, speed: 2)
-        )
-    
-        return animation
-    }
-
-    
-  
- 
-
-
 
     @objc var source: NSString = "" {
         didSet{
-            dataStore.source = source
+          dataStore.source = source
+          dataStore.createAnimation()
         }
       }
 
     @objc var loop: Bool = false {
         didSet{
             dataStore.loop = loop
+            dataStore.createAnimation()
         }
       }
 
     @objc var autoplay: Bool = true {
       didSet{
-        
-          dataStore.loop = loop
+        dataStore.autoplay = autoplay
+        dataStore.createAnimation()
       }
     }
     

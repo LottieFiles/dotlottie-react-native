@@ -10,23 +10,24 @@ export default function App() {
       <DotLottie
         ref={ref}
         source={{
-          uri: 'https://lottie.host/3a34a38a-e52f-486f-8709-3063f9d18af9/1tzAlg30dp.json',
+          uri: 'https://lottie.host/b5be3cdc-9a7f-4909-9899-a9cd9e14c1f2/ckhMNiVZ90.lottie',
         }}
         style={styles.box}
-        loop={true}
-        autoplay={false}
-        onPlay={(a) => console.log('onPlay', a.nativeEvent)}
-        onLoop={(a) => console.log('onLoop', a.nativeEvent.loopCount)}
+        loop={false}
+        autoplay={true}
+        onPlay={() => console.log('onPlay')}
+        onLoop={(loopCount) => console.log('onLoop', loopCount)}
         onPause={() => console.log('onPause')}
         onStop={() => console.log('onStop')}
         onTransition={(event) => console.log('onTransitionEnd', event)}
         onStateEntered={(event) => console.log('onStateEntered', event)}
       />
+
       <Button title="Play" onPress={() => ref.current?.play()} />
       <Button title="Pause" onPress={() => ref.current?.pause()} />
       <Button title="Stop" onPress={() => ref.current?.stop()} />
       <Button title="Loop" onPress={() => ref.current?.setLoop(true)} />
-      <Button title="Speed" onPress={() => ref.current?.setSpeed(1)} />
+      <Button title="Speed" onPress={() => ref.current?.setSpeed(4)} />
 
       <Button
         title="FORWARD"
