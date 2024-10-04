@@ -28,7 +28,7 @@ class YourDotLottieObserver: Observer {
     }
 
     func onLoad() {
-        dataStore.onLoad(["" : ""])
+//        dataStore.onLoad(["" : ""])
     }
 
     func onLoadError() {
@@ -36,7 +36,8 @@ class YourDotLottieObserver: Observer {
     }
 
     func onLoop(loopCount: UInt32) {
-//        dataStore.onLoop(["loopCount" : loopCount])
+        dataStore.onLoop(["loopCount" :
+                         ])
     }
 
     func onPause() {
@@ -99,6 +100,7 @@ class DotlottieReactNativeViewManager: RCTViewManager {
   
   @objc func stop(_ node:NSNumber) {
     DispatchQueue.main.async {
+      
       print("Stop")
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
       dotLottieView._animation?.stop()
@@ -115,11 +117,13 @@ class DotlottieReactNativeViewManager: RCTViewManager {
     }
   
   @objc
-  func loop(_ node:NSNumber, loop:NSNumber) {
+  func setLoop(_ node:NSNumber, loop:Bool) {
     DispatchQueue.main.async {
       print("Loop")
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      dotLottieView._animation?.loop()
+      dotLottieView._animation?.setLoop(loop: loop)
+      
+      
     }
   }
   

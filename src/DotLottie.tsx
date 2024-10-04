@@ -11,6 +11,7 @@ import {
   Platform,
   type ViewStyle,
   findNodeHandle,
+  type NativeSyntheticEvent,
 } from 'react-native';
 import type { Mode } from './constants';
 import { parseSource } from './utils';
@@ -45,6 +46,34 @@ export type Dotlottie = {
   setManifest: () => void;
 };
 
+interface DotlottieNativeProps {
+  source: string | { uri: string };
+  loop?: boolean;
+  autoplay?: boolean;
+  speed?: number;
+  themeId?: string;
+  marker?: string;
+  segment?: number[];
+  playMode?: Mode;
+  style: ViewStyle;
+  ref?: MutableRefObject<any>;
+  onLoad?: () => void;
+  onComplete?: () => void;
+  onLoadError?: () => void;
+  onPlay?: () => void;
+  onLoop?: (event: NativeSyntheticEvent<{ loopCount: number }>) => void;
+  onDestroy?: () => void;
+  onUnFreeze?: () => void;
+  onFreeze?: () => void;
+  onPause?: () => void;
+  onFrame?: () => void;
+  onStop?: () => void;
+  onRender?: () => void;
+  onTransition?: (state: { previousState: string; newState: string }) => void;
+  onStateExit?: (state: { leavingState: string }) => void;
+  onStateEntered?: (state: { enteringState: string }) => void;
+}
+
 interface DotlottieReactNativeProps {
   source: string | { uri: string };
   loop?: boolean;
@@ -59,8 +88,8 @@ interface DotlottieReactNativeProps {
   onLoad?: () => void;
   onComplete?: () => void;
   onLoadError?: () => void;
-  onPlay?: (e: any) => void;
-  onLoop?: (e: any) => void;
+  onPlay?: () => void;
+  onLoop?: (loopCount: number) => void;
   onDestroy?: () => void;
   onUnFreeze?: () => void;
   onFreeze?: () => void;
@@ -76,7 +105,8 @@ interface DotlottieReactNativeProps {
 const COMMAND_PLAY = 'play';
 const COMMAND_PAUSE = 'pause';
 const COMMAND_STOP = 'stop';
-const COMMAND_SET_LOOP = 'loop';
+
+const COMMAND_SET_LOOP = 'setLoop';
 const COMMAND_SET_SPEED = 'setSpeed';
 const COMMAND_SET_PLAY_MODE = 'setPlayMode';
 const COMMAND_SET_FRAME = 'setFrame';
@@ -103,7 +133,7 @@ const NativeViewManager = UIManager.getViewManagerConfig(ComponentName);
 
 const DotlottieReactNativeView =
   UIManager.getViewManagerConfig(ComponentName) != null
-    ? requireNativeComponent<DotlottieReactNativeProps>(ComponentName)
+    ? requireNativeComponent<DotlottieNativeProps>(ComponentName)
     : () => {
         throw new Error(LINKING_ERROR);
       };
@@ -395,6 +425,9 @@ export const DotLottie = forwardRef(
         autoplay={false}
         source={parsedSource || ''}
         {...props}
+        onLoop={(event) => {
+          props.onLoop?.(event.nativeEvent.loopCount);
+        }}
       />
     );
   }

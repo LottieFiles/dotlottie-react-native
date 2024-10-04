@@ -14,9 +14,9 @@ export default function App() {
         }}
         style={styles.box}
         loop={true}
-        autoplay={true}
+        autoplay={false}
         onPlay={(a) => console.log('onPlay', a.nativeEvent)}
-        onLoop={(a) => console.log('onLoop', a)}
+        onLoop={(a) => console.log('onLoop', a.nativeEvent.loopCount)}
         onPause={() => console.log('onPause')}
         onStop={() => console.log('onStop')}
         onTransition={(event) => console.log('onTransitionEnd', event)}
