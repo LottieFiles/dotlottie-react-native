@@ -6,6 +6,7 @@ import SwiftUI
    @Published var source: NSString = ""
   @Published var loop: Bool = false
   @Published var autoplay: Bool = true
+  @Published var speed: Double = 1
   @Published var onPlay: RCTBubblingEventBlock = {_ in }
   @Published var onLoad: RCTBubblingEventBlock = {_ in }
   @Published var onLoadError: RCTBubblingEventBlock = {_ in }
@@ -17,11 +18,19 @@ import SwiftUI
      if(self.source != ""){
        self.animation = DotLottieAnimation(
         webURL: source as String,
-        config: AnimationConfig(autoplay: autoplay, loop: loop, speed: 2)
+        config: AnimationConfig(autoplay: autoplay, loop: loop, speed: Float(speed))
        )
      }
    }
 }
+
+
+
+
+
+
+
+
 
 
 class YourDotLottieObserver: Observer {
@@ -112,7 +121,6 @@ class DotlottieReactNativeViewManager: RCTViewManager {
   @objc
   func pause(_ node:NSNumber) {
     DispatchQueue.main.async {
-      print("Pause")
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
       _ = dotLottieView._animation?.pause()
     }
@@ -121,7 +129,6 @@ class DotlottieReactNativeViewManager: RCTViewManager {
   @objc
   func stop(_ node:NSNumber) {
     DispatchQueue.main.async {
-      print("Stop")
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
       _ = dotLottieView._animation?.stop()
     }
@@ -130,7 +137,6 @@ class DotlottieReactNativeViewManager: RCTViewManager {
   @objc
   func play(_ node:NSNumber) {
       DispatchQueue.main.async {
-        print("Play")
         let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
         _ = dotLottieView._animation?.play()
         
@@ -140,7 +146,6 @@ class DotlottieReactNativeViewManager: RCTViewManager {
   @objc
   func setLoop(_ node:NSNumber, loop:Bool) {
     DispatchQueue.main.async {
-      print("Loop")
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
       _ = dotLottieView._animation?.setLoop(loop: loop)
     }
@@ -159,6 +164,44 @@ class DotlottieReactNativeViewManager: RCTViewManager {
       let convertedFrame = Float(truncating: frame)
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
       _ = dotLottieView._animation?.setFrame(frame: convertedFrame)
+    }
+  }
+  
+  @objc func startStateMachine(_ node:NSNumber,stateMachineiId: NSString) {
+    DispatchQueue.main.async {
+      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      let stateMachine = dotLottieView._animation?.loadStateMachine(id: String(stateMachineiId))
+      if(stateMachine != nil) {
+        _ = dotLottieView._animation?.startStateMachine()
+      }
+    }
+  }
+  
+  @objc func postEvent(_ node:NSNumber, x:NSNumber, y:NSNumber) {
+    DispatchQueue.main.async {
+      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      let event = Event.onPointerDown(x: Float(truncating: x), y: Float(truncating: y))
+      _ = dotLottieView._animation?.postEvent(event)
+    }
+    
+  }
+  
+
+  
+  @objc func setSegments(_ node:NSNumber, start:NSNumber, end:NSNumber) {
+    DispatchQueue.main.async {
+      let start = Float(truncating: start)
+      let end = Float(truncating: end)
+      let segments: (Float, Float) = (start, end)
+      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      _ = dotLottieView._animation?.setSegments(segments: segments)
+    }
+  }
+  
+  @objc func setFrameInterpolation(_ node:NSNumber, useFrameInterpolation:Bool) {
+    DispatchQueue.main.async {
+      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      _ = dotLottieView._animation?.setFrameInterpolation(useFrameInterpolation)
     }
   }
   
@@ -254,6 +297,13 @@ class DotlottieReactNativeView: UIView {
         dataStore.createAnimation()
       }
     }
+  
+  @objc var speed: Double = 1 {
+    didSet{
+      dataStore.speed = speed
+      dataStore.createAnimation()
+    }
+  }
     
     @objc var onPlay: RCTBubblingEventBlock = {_ in} {
         didSet{

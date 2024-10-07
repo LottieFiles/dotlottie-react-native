@@ -9,9 +9,7 @@ export default function App() {
     <View style={styles.container}>
       <DotLottie
         ref={ref}
-        source={{
-          uri: 'https://lottie.host/b5be3cdc-9a7f-4909-9899-a9cd9e14c1f2/ckhMNiVZ90.lottie',
-        }}
+        source={require('../assets/pigeon_with_listeners.lottie')}
         style={styles.box}
         loop={false}
         autoplay={true}
@@ -55,6 +53,8 @@ export default function App() {
         title="STOP_STATE_MACHINE"
         onPress={() => ref.current?.stopStateMachine()}
       />
+
+      <Button title="post Event" onPress={() => ref.current?.postEvent(0, 0)} />
     </View>
   );
 }

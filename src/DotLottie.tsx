@@ -35,7 +35,7 @@ export type Dotlottie = {
   startStateMachine: (stateMachineId: string) => void;
   stopStateMachine: () => void;
   loadStateMachine: (stateMachineId: string) => void;
-  setPostEvent: (event: string) => void;
+  postEvent: (x: number, y: number) => void;
   addStateMachineEventListener: () => void;
   removeStateMachineEventListener: () => void;
   resize: (width: number, height: number) => void;
@@ -94,6 +94,7 @@ interface DotlottieReactNativeProps {
   onUnFreeze?: () => void;
   onFreeze?: () => void;
   onPause?: () => void;
+
   onFrame?: () => void;
   onStop?: () => void;
   onRender?: () => void;
@@ -297,13 +298,13 @@ export const DotLottie = forwardRef(
       []
     );
 
-    const setPostEventWithUIManager = useCallback((event: string) => {
+    const postEventWithUIManager = useCallback((x: number, y: number) => {
       const command = NativeViewManager.Commands[COMMAND_SET_POST_EVENT];
       if (command) {
         return UIManager.dispatchViewManagerCommand(
           findNodeHandle(nativeRef.current),
           command,
-          [event]
+          [x, y]
         );
       }
     }, []);
@@ -404,7 +405,7 @@ export const DotLottie = forwardRef(
       startStateMachine: startStateMachineWithUIManager,
       stopStateMachine: stopStateMachineWithUIManager,
       loadStateMachine: loadStateMachineWithUIManager,
-      setPostEvent: setPostEventWithUIManager,
+      postEvent: postEventWithUIManager,
       addStateMachineEventListener: addStateMachineEventListenerWithUIManager,
       removeStateMachineEventListener:
         removeStateMachineEventListenerWithUIManager,
