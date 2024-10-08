@@ -1,18 +1,18 @@
-# dotlottie-react-native
+# dotLottie React Native
 
-dotlottie react native
+Lottie & dotLottie component for React Native ([iOS](https://github.com/LottieFiles/dotlottie-ios/) and [Android](https://github.com/LottieFiles/dotlottie-android/))
 
 ## Installation
 
 ```sh
-npm install dotlottie-react-native
+npm install @lottiefiles/dotlottie-react-native
 ```
 
 ## Usage
 
 ```ts
 import { Button, StyleSheet, View } from 'react-native';
-import { DotLottie, Mode, type Dotlottie } from 'dotlottie-react-native';
+import { DotLottie, Mode, type Dotlottie } from '@lottiefiles/dotlottie-react-native';
 import { useRef } from 'react';
 
 export default function App() {
