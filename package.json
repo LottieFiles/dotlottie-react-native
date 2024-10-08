@@ -1,5 +1,5 @@
 {
-  "name": "dotlottie-react-native",
+  "name": "@lottiefiles/dotlottie-react-native",
   "version": "0.1.0",
   "description": "dotlottie react native",
   "source": "./src/index.tsx",
