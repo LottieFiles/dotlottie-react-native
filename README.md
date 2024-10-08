@@ -1,5 +1,7 @@
 # dotLottie React Native
 
+Lottie & dotLottie component for React Native ([iOS](https://github.com/LottieFiles/dotlottie-ios/) and [Android](https://github.com/LottieFiles/dotlottie-android/))
+
 ## Installation
 
 ```sh

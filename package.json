@@ -47,7 +47,11 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "lottie",
+    "dotlottie",
+    "player",
+    "animation"
   ],
   "repository": {
     "type": "git",
