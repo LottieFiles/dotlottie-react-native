@@ -1,5 +1,5 @@
 {
-  "name": "dotlottie-react-native",
+  "name": "@lottiefiles/dotlottie-react-native",
   "version": "0.1.0",
   "description": "dotlottie react native",
   "source": "./src/index.tsx",
@@ -47,7 +47,11 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "lottie",
+    "dotlottie",
+    "player",
+    "animation"
   ],
   "repository": {
     "type": "git",
@@ -60,7 +64,7 @@
   },
   "homepage": "https://github.com/LottieFiles/dotlottie-react-native#readme",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
+    "access": "public"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.2",
