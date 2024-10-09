@@ -1,11 +1,60 @@
 # dotlottie-react-native
 
-dotlottie react native
-
 ## Installation
+
+### npm
 
 ```sh
 npm install dotlottie-react-native
+```
+
+### yarn
+
+```sh
+yarn add dotlottie-react-native
+```
+
+### Pod Installation (iOS)
+
+To support iOS 15.4, ensure your `Podfile` specifies the platform version:
+
+```ruby
+platform :ios, '15.4'
+```
+
+After installing the package, navigate to the `ios` directory and install the pods:
+
+```sh
+cd ios
+pod install
+```
+
+### Metro Configuration
+
+To support `.lottie` files, update your `metro.config.js`:
+
+```javascript
+// metro.config.js
+const { getDefaultConfig } = require('metro-config');
+
+module.exports = (async () => {
+  const {
+    resolver: { sourceExts, assetExts },
+  } = await getDefaultConfig();
+  return {
+    resolver: {
+      assetExts: [...assetExts, 'lottie'],
+    },
+  };
+})();
+```
+
+### Expo Configuration
+
+If you're using Expo, you need to prebuild to generate the `ios` and `android` folders:
+
+```sh
+expo prebuild
 ```
 
 ## Usage
@@ -57,6 +106,25 @@ const styles = StyleSheet.create({
   },
 });
 ```
+
+## Props and Methods
+
+| Prop/Method                         | Type                           | Default Value | Description                                                       |
+| ----------------------------------- | ------------------------------ | ------------- | ----------------------------------------------------------------- |
+| `source`                            | `{ uri: string }` or `require` | **Required**  | Specifies the animation file to be loaded.                        |
+| `style`                             | `StyleProp<ViewStyle>`         | `undefined`   | Custom styles for the animation container.                        |
+| `loop`                              | `boolean`                      | `false`       | Determines if the animation should loop continuously.             |
+| `autoplay`                          | `boolean`                      | `false`       | Determines if the animation should start playing automatically.   |
+| `ref`                               | `React.RefObject<Dotlottie>`   | `null`        | Reference to control the animation programmatically.              |
+| `play()`                            | `function`                     | N/A           | Starts playing the animation.                                     |
+| `pause()`                           | `function`                     | N/A           | Pauses the animation.                                             |
+| `stop()`                            | `function`                     | N/A           | Stops the animation and resets to the beginning.                  |
+| `setLoop(loop: boolean)`            | `function`                     | N/A           | Sets the looping behavior of the animation.                       |
+| `setSpeed(speed: number)`           | `function`                     | N/A           | Sets the playback speed of the animation.                         |
+| `setPlayMode(mode: Mode)`           | `function`                     | N/A           | Sets the play mode (`FORWARD` or `REVERSE`) of the animation.     |
+| `startStateMachine(name: string)`   | `function`                     | N/A           | Initiates a state machine by name for advanced animation control. |
+| `removeStateMachineEventListener()` | `function`                     | N/A           | Removes event listeners associated with the state machine.        |
+| `stopStateMachine()`                | `function`                     | N/A           | Stops the state machine controlling the animation.                |
 
 ## Contributing
 
