@@ -13,7 +13,7 @@ npm install @lottiefiles/dotlottie-react-native
 ### yarn
 
 ```sh
-yarn add dotlottie-react-native
+yarn add @lottiefiles/dotlottie-react-native
 ```
 
 ### Pod Installation (iOS)
