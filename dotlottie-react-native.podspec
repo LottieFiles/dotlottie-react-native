@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
 
   s.source_files = "ios/**/*.{h,m,mm,swift}"
 
-  s.dependency 'dotLottie-iOS'
+  s.dependency 'LottieFiles-dotLottie-iOS', '~> 0.9'
 
   s.swift_version = '5.0'
   s.ios.deployment_target = "15.4"

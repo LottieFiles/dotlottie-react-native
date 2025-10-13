@@ -77,7 +77,7 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
       }
     }
 
-    LaunchedEffect(UInt) { dotLottieController.addStateMachineEventListener(stateListener) }
+    LaunchedEffect(UInt) { dotLottieController.stateMachineAddEventListener(stateListener) }
 
     animationUrl?.let { url ->
       DotLottieAnimation(
@@ -170,7 +170,7 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   }
 
   fun postEvent(event: String) {
-    dotLottieController.postEvent(Event.String(event))
+    // dotLottieController.stateMachinePostEvent(Event.String(event))
   }
 
   fun resize(width: UInt, height: UInt) {

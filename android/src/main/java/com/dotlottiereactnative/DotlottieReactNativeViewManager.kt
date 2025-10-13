@@ -101,19 +101,19 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
 
     if (commandId == COMMAND_START_STATE_MACHINE_ID) {
       val stateMachineId = args?.getString(0) ?: ""
-      val result = view.dotLottieController.loadStateMachine(stateMachineId)
+      val result = view.dotLottieController.stateMachineLoad(stateMachineId)
       if (result) {
-        view.dotLottieController.startStateMachine()
+        view.dotLottieController.stateMachineStart()
       }
     }
 
     if (commandId == COMMAND_STOP_STATE_MACHINE_ID) {
-      view.dotLottieController.stopStateMachine()
+      view.dotLottieController.stateMachineStop()
     }
 
     if (commandId == COMMAND_LOAD_STATE_MACHINE_ID) {
       val stateMachineId = args?.getString(0) ?: ""
-      view.dotLottieController.loadStateMachine(stateMachineId)
+      view.dotLottieController.stateMachineLoad(stateMachineId)
     }
 
     if (commandId == COMMAND_POST_EVENT_ID) {
@@ -142,7 +142,7 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
 
     if (commandId == COMMAND_LOAD_THEME_ID) {
       val themeId = args?.getString(0) ?: ""
-      view.dotLottieController.loadTheme(themeId)
+      view.dotLottieController.setTheme(themeId)
     }
 
     if (commandId == COMMAND_LOAD_ANIMATION_ID) {

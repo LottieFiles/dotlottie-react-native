@@ -2,7 +2,7 @@
   "name": "@lottiefiles/dotlottie-react-native",
   "version": "0.1.0",
   "description": "dotlottie react native",
-  "source": "./src/index.tsx",
+  "source": "./src/index.ts",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
   "exports": {

@@ -1,4 +1,4 @@
-import dotLottie
+import DotLottie
 import SwiftUI
 
 
@@ -16,10 +16,22 @@ import SwiftUI
    
    func createAnimation() {
      if(self.source != ""){
-       self.animation = DotLottieAnimation(
-        webURL: source as String,
-        config: AnimationConfig(autoplay: autoplay, loop: loop, speed: Float(speed))
-       )
+       let sourceString = source as String
+
+       if sourceString.hasPrefix("file://") {
+         if let url = URL(string: sourceString),
+            let data = try? Data(contentsOf: url) {
+           self.animation = DotLottieAnimation(
+             dotLottieData: data,
+             config: AnimationConfig(autoplay: autoplay, loop: loop, speed: Float(speed))
+           )
+         }
+       } else {
+         self.animation = DotLottieAnimation(
+           webURL: sourceString,
+           config: AnimationConfig(autoplay: autoplay, loop: loop, speed: Float(speed))
+         )
+       }
      }
    }
 }
@@ -170,18 +182,18 @@ class DotlottieReactNativeViewManager: RCTViewManager {
   @objc func startStateMachine(_ node:NSNumber,stateMachineiId: NSString) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      let stateMachine = dotLottieView._animation?.loadStateMachine(id: String(stateMachineiId))
+      let stateMachine = dotLottieView._animation?.stateMachineLoad(id: String(stateMachineiId))
       if(stateMachine != nil) {
-        _ = dotLottieView._animation?.startStateMachine()
+        _ = dotLottieView._animation?.stateMachineStart()
       }
     }
   }
   
   @objc func postEvent(_ node:NSNumber, x:NSNumber, y:NSNumber) {
     DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      let event = Event.onPointerDown(x: Float(truncating: x), y: Float(truncating: y))
-      _ = dotLottieView._animation?.postEvent(event)
+      // let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      // let event = Event.onPointerDown(x: Float(truncating: x), y: Float(truncating: y))
+      // _ = dotLottieView._animation?.postEvent(event)
     }
     
   }
@@ -287,21 +299,21 @@ class DotlottieReactNativeView: UIView {
     @objc var loop: Bool = false {
         didSet{
             dataStore.loop = loop
-            dataStore.createAnimation()
+            _animation?.setLoop(loop: loop)
         }
       }
 
     @objc var autoplay: Bool = true {
       didSet{
         dataStore.autoplay = autoplay
-        dataStore.createAnimation()
+        _animation?.setAutoplay(autoplay: autoplay)
       }
     }
   
   @objc var speed: Double = 1 {
     didSet{
       dataStore.speed = speed
-      dataStore.createAnimation()
+      _animation?.setSpeed(speed: Float(speed))
     }
   }
     
