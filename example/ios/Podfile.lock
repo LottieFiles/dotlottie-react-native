@@ -4,7 +4,7 @@ PODS:
     - DoubleConversion
     - glog
     - hermes-engine
-    - LottieFiles-dotLottie-iOS
+    - LottieFiles-dotLottie-iOS (~> 0.9)
     - RCT-Folly (= 2024.01.01.00)
     - RCTRequired
     - RCTTypeSafety
@@ -1369,7 +1369,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
-  dotlottie-react-native: 0c2be6ee1d87719242bfddafb3a70b10fb6ac52e
+  dotlottie-react-native: 82c886d469116f3df53a7a716a28331e90de6c0c
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   FBLazyVector: ac12dc084d1c8ec4cc4d7b3cf1b0ebda6dab85af
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
