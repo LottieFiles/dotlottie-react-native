@@ -6,16 +6,21 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    if: ${{ github.repository == 'LottieFiles/dotlottie-react-native' && github.event_name == 'push' }}
     permissions:
       contents: write
       id-token: write
       pull-requests: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -37,11 +42,11 @@ jobs:
       - name: Setup .npmrc (NPM)
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPMJS_TOKEN }}" >> ~/.npmrc
 
-      - name: Release to NPM
+      - name: 🚀 Release to NPM
         uses: changesets/action@v1
         with:
-          commit: 'chore: update versions'
-          title: 'chore: update versions'
+          commit: 'chore: 🤖 update versions'
+          title: 'chore: 🤖 update versions'
           publish: yarn release:publish
           version: yarn release:version
           createGithubReleases: true
