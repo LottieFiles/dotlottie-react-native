@@ -5,6 +5,7 @@
   "source": "./src/index.ts",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
+  "react-native": "./src/index.ts",
   "exports": {
     ".": {
       "import": {
@@ -40,7 +41,7 @@
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
-    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
+    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build example/dist lib",
     "prepare": "bob build",
     "release": "release-it"
   },
@@ -48,6 +49,7 @@
     "react-native",
     "ios",
     "android",
+    "web",
     "lottie",
     "dotlottie",
     "player",
@@ -190,5 +192,8 @@
     "type": "view-legacy",
     "languages": "kotlin-swift",
     "version": "0.40.0"
+  },
+  "dependencies": {
+    "@lottiefiles/dotlottie-react": "^0.17.5"
   }
 }

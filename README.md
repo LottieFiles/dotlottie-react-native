@@ -1,6 +1,6 @@
 # dotLottie React Native
 
-Lottie & dotLottie component for React Native ([iOS](https://github.com/LottieFiles/dotlottie-ios/) and [Android](https://github.com/LottieFiles/dotlottie-android/))
+Lottie & dotLottie component for React Native ([iOS](https://github.com/LottieFiles/dotlottie-ios/), [Android](https://github.com/LottieFiles/dotlottie-android/), and [Web](https://github.com/LottieFiles/dotlottie-web))
 
 ## Installation
 
@@ -58,6 +58,10 @@ If you're using Expo, you need to prebuild to generate the `ios` and `android` f
 ```sh
 expo prebuild
 ```
+
+### Web Support
+
+This package supports React Native Web out of the box. The web implementation uses [@lottiefiles/dotlottie-react](https://www.npmjs.com/package/@lottiefiles/dotlottie-react) under the hood.
 
 ## Usage
 
