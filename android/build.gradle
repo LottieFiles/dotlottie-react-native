@@ -5,12 +5,19 @@ buildscript {
   repositories {
     google()
     mavenCentral()
+    gradlePluginPortal()
   }
 
   dependencies {
     classpath "com.android.tools.build:gradle:7.2.1"
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+    // Compose Compiler plugin for Kotlin 2.0+ compatibility
+    // For Kotlin 1.x, this plugin is not required
+    if (kotlin_version.startsWith("2.")) {
+      classpath "org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:$kotlin_version"
+    }
   }
 }
 
@@ -32,6 +39,12 @@ if (isNewArchitectureEnabled()) {
 
 def getExtOrDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["DotlottieReactNative_" + name]
+}
+
+// Apply Compose Compiler plugin for Kotlin 2.0+
+def kotlin_version_for_compose = getExtOrDefault("kotlinVersion")
+if (kotlin_version_for_compose.startsWith("2.")) {
+  apply plugin: "org.jetbrains.kotlin.plugin.compose"
 }
 
 def getExtOrIntegerDefault(name) {
@@ -62,8 +75,12 @@ android {
        compose = true
   }
 
-  composeOptions {
-       kotlinCompilerExtensionVersion = "1.5.10"
+  // For Kotlin 1.x, we need to specify the compiler extension version
+  // For Kotlin 2.0+, this is handled by the Compose Compiler plugin
+  if (!kotlin_version_for_compose.startsWith("2.")) {
+    composeOptions {
+         kotlinCompilerExtensionVersion = "1.5.10"
+    }
   }
 
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
