@@ -1,15 +1,18 @@
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useRef,
   type MutableRefObject,
   type CSSProperties,
 } from 'react';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import type { Mode } from './constants';
+import {
+  DotLottieReact,
+  type DotLottie as DotLottiePlayer,
+} from '@lottiefiles/dotlottie-react';
 import { parseSource } from './utils';
-import type { DotLottie as DotLottiePlayer } from '@lottiefiles/dotlottie-web';
+import type { Mode } from './DotLottie';
 
 export type Dotlottie = {
   play: () => void;
@@ -42,8 +45,10 @@ interface DotlottieReactNativeProps {
   speed?: number;
   themeId?: string;
   marker?: string;
-  segment?: number[];
+  segment?: [number, number];
   playMode?: Mode;
+  useFrameInterpolation?: boolean;
+  stateMachineId?: string;
   style?: any;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;
@@ -55,9 +60,9 @@ interface DotlottieReactNativeProps {
   onDestroy?: () => void;
   onFreeze?: () => void;
   onPause?: () => void;
-  onFrame?: () => void;
+  onFrame?: (frame: number) => void;
   onStop?: () => void;
-  onRender?: () => void;
+  onRender?: (frame: number) => void;
   onTransition?: (state: { previousState: string; newState: string }) => void;
   onStateExit?: (state: { leavingState: string }) => void;
   onStateEntered?: (state: { enteringState: string }) => void;
@@ -74,6 +79,8 @@ export const DotLottie = forwardRef(
       marker,
       segment,
       playMode,
+      useFrameInterpolation,
+      stateMachineId,
       style,
       onLoad,
       onComplete,
@@ -127,7 +134,9 @@ export const DotLottie = forwardRef(
         }
 
         if (onFrame) {
-          dotLottie.addEventListener('frame', onFrame);
+          dotLottie.addEventListener('frame', ({ currentFrame }) => {
+            onFrame(currentFrame);
+          });
         }
 
         if (onStop) {
@@ -135,7 +144,9 @@ export const DotLottie = forwardRef(
         }
 
         if (onRender) {
-          dotLottie.addEventListener('render', onRender);
+          dotLottie.addEventListener('render', ({ currentFrame }) => {
+            onRender(currentFrame);
+          });
         }
 
         if (onFreeze) {
@@ -144,34 +155,6 @@ export const DotLottie = forwardRef(
 
         if (onUnFreeze) {
           dotLottie.addEventListener('unfreeze', onUnFreeze);
-        }
-
-        // Apply initial settings
-        if (speed !== undefined) {
-          dotLottie.setSpeed(speed);
-        }
-
-        if (themeId) {
-          dotLottie.setTheme(themeId);
-        }
-
-        if (marker) {
-          dotLottie.setMarker(marker);
-        }
-
-        if (segment && segment.length === 2) {
-          dotLottie.setSegment(segment[0]!, segment[1]!);
-        }
-
-        if (playMode !== undefined) {
-          // Map Mode enum to string values expected by dotLottie-web
-          const modeMap: Record<Mode, string> = {
-            [0]: 'forward', // FORWARD
-            [1]: 'reverse', // REVERSE
-            [2]: 'bounce', // BOUNCE
-            [3]: 'reverse-bounce', // REVERSE_BOUNCE
-          };
-          dotLottie.setMode(modeMap[playMode] as any);
         }
       },
       [
@@ -186,13 +169,17 @@ export const DotLottie = forwardRef(
         onRender,
         onFreeze,
         onUnFreeze,
-        speed,
-        themeId,
-        marker,
-        segment,
-        playMode,
       ]
     );
+
+    // Make autoplay reactive: control play/pause state
+    useEffect(() => {
+      if (autoplay) {
+        dotLottieRef.current?.play();
+      } else {
+        dotLottieRef.current?.pause();
+      }
+    }, [autoplay]);
 
     useImperativeHandle(ref, () => ({
       play: () => {
@@ -228,9 +215,9 @@ export const DotLottie = forwardRef(
       unfreeze: () => {
         dotLottieRef.current?.unfreeze();
       },
-      startStateMachine: (stateMachineId: string) => {
+      startStateMachine: () => {
         if (dotLottieRef.current) {
-          (dotLottieRef.current as any).stateMachineStart?.(stateMachineId);
+          (dotLottieRef.current as any).stateMachineStart?.();
         }
       },
       stopStateMachine: () => {
@@ -238,19 +225,10 @@ export const DotLottie = forwardRef(
           (dotLottieRef.current as any).stateMachineStop?.();
         }
       },
-      loadStateMachine: (stateMachineId: string) => {
+      loadStateMachine: (givenStateMachineId: string) => {
         if (dotLottieRef.current) {
-          (dotLottieRef.current as any).stateMachineLoad?.(stateMachineId);
+          (dotLottieRef.current as any).stateMachineLoad?.(givenStateMachineId);
         }
-      },
-      postEvent: (_x: number, _y: number) => {
-        // TODO: implement postEvent
-      },
-      addStateMachineEventListener: () => {
-        // TODO: implement addStateMachineEventListener
-      },
-      removeStateMachineEventListener: () => {
-        // TODO: implement removeStateMachineEventListener
       },
       resize: (_width: number, _height: number) => {
         dotLottieRef.current?.resize();
@@ -283,6 +261,14 @@ export const DotLottie = forwardRef(
       ...style,
     };
 
+    // Convert playMode enum to mode string
+    const mode =
+      playMode !== undefined
+        ? (['forward', 'reverse', 'bounce', 'reverse-bounce'] as const)[
+            playMode
+          ]
+        : undefined;
+
     return (
       <DotLottieReact
         src={src}
@@ -291,6 +277,10 @@ export const DotLottie = forwardRef(
         speed={speed}
         themeId={themeId}
         marker={marker}
+        segment={segment}
+        mode={mode}
+        useFrameInterpolation={useFrameInterpolation}
+        stateMachineId={stateMachineId}
         style={canvasStyle}
         dotLottieRefCallback={dotLottieRefCallback}
       />

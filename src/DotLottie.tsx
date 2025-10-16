@@ -13,7 +13,6 @@ import {
   findNodeHandle,
   type NativeSyntheticEvent,
 } from 'react-native';
-import type { Mode } from './constants';
 import { parseSource } from './utils';
 
 const LINKING_ERROR =
@@ -21,6 +20,13 @@ const LINKING_ERROR =
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
+
+export enum Mode {
+  FORWARD,
+  REVERSE,
+  BOUNCE,
+  REVERSE_BOUNCE,
+}
 
 export type Dotlottie = {
   play: () => void;
@@ -32,18 +38,18 @@ export type Dotlottie = {
   setFrame: (frame: number) => void;
   freeze: () => void;
   unfreeze: () => void;
-  startStateMachine: (stateMachineId: string) => void;
-  stopStateMachine: () => void;
-  loadStateMachine: (stateMachineId: string) => void;
-  postEvent: (x: number, y: number) => void;
-  addStateMachineEventListener: () => void;
-  removeStateMachineEventListener: () => void;
+  stateMachineStart: () => void;
+  stateMachineStop: () => void;
+  stateMachineLoad: (stateMachineId: string) => void;
+  stateMachineFire: (event: string) => void;
+  stateMachineSetNumericInput: (key: string, value: number) => boolean;
+  stateMachineSetStringInput: (key: string, value: string) => boolean;
+  stateMachineSetBooleanInput: (key: string, value: boolean) => boolean;
   resize: (width: number, height: number) => void;
   setSegment: (start: number, end: number) => void;
   setMarker: (marker: string) => void;
-  loadTheme: (themeId: string) => void;
+  setTheme: (themeId: string) => void;
   loadAnimation: (animationId: string) => void;
-  setManifest: () => void;
 };
 
 interface DotlottieNativeProps {
@@ -53,8 +59,10 @@ interface DotlottieNativeProps {
   speed?: number;
   themeId?: string;
   marker?: string;
-  segment?: number[];
+  segment?: [number, number];
   playMode?: Mode;
+  useFrameInterpolation?: boolean;
+  stateMachineId?: string;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;
@@ -66,12 +74,51 @@ interface DotlottieNativeProps {
   onUnFreeze?: () => void;
   onFreeze?: () => void;
   onPause?: () => void;
-  onFrame?: () => void;
+  onFrame?: (event: NativeSyntheticEvent<{ frameNo: number }>) => void;
   onStop?: () => void;
-  onRender?: () => void;
-  onTransition?: (state: { previousState: string; newState: string }) => void;
-  onStateExit?: (state: { leavingState: string }) => void;
-  onStateEntered?: (state: { enteringState: string }) => void;
+  onRender?: (event: NativeSyntheticEvent<{ frameNo: number }>) => void;
+  // State machine events
+  onStateMachineStart?: () => void;
+  onStateMachineStop?: () => void;
+  onStateMachineStateEntered?: (
+    event: NativeSyntheticEvent<{ enteringState: string }>
+  ) => void;
+  onStateMachineStateExit?: (
+    event: NativeSyntheticEvent<{ leavingState: string }>
+  ) => void;
+  onStateMachineTransition?: (
+    event: NativeSyntheticEvent<{ previousState: string; newState: string }>
+  ) => void;
+  onStateMachineBooleanInputChange?: (
+    event: NativeSyntheticEvent<{
+      inputName: string;
+      oldValue: boolean;
+      newValue: boolean;
+    }>
+  ) => void;
+  onStateMachineNumericInputChange?: (
+    event: NativeSyntheticEvent<{
+      inputName: string;
+      oldValue: number;
+      newValue: number;
+    }>
+  ) => void;
+  onStateMachineStringInputChange?: (
+    event: NativeSyntheticEvent<{
+      inputName: string;
+      oldValue: string;
+      newValue: string;
+    }>
+  ) => void;
+  onStateMachineInputFired?: (
+    event: NativeSyntheticEvent<{ inputName: string }>
+  ) => void;
+  onStateMachineCustomEvent?: (
+    event: NativeSyntheticEvent<{ message: string }>
+  ) => void;
+  onStateMachineError?: (
+    event: NativeSyntheticEvent<{ message: string }>
+  ) => void;
 }
 
 interface DotlottieReactNativeProps {
@@ -81,8 +128,10 @@ interface DotlottieReactNativeProps {
   speed?: number;
   themeId?: string;
   marker?: string;
-  segment?: number[];
+  segment?: [number, number];
   playMode?: Mode;
+  useFrameInterpolation?: boolean;
+  stateMachineId?: string;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;
@@ -94,13 +143,33 @@ interface DotlottieReactNativeProps {
   onUnFreeze?: () => void;
   onFreeze?: () => void;
   onPause?: () => void;
-
-  onFrame?: () => void;
+  onFrame?: (frameNo: number) => void;
   onStop?: () => void;
-  onRender?: () => void;
-  onTransition?: (state: { previousState: string; newState: string }) => void;
-  onStateExit?: (state: { leavingState: string }) => void;
-  onStateEntered?: (state: { enteringState: string }) => void;
+  onRender?: (frameNo: number) => void;
+  // State machine events
+  onStateMachineStart?: () => void;
+  onStateMachineStop?: () => void;
+  onStateMachineStateEntered?: (enteringState: string) => void;
+  onStateMachineStateExit?: (leavingState: string) => void;
+  onStateMachineTransition?: (previousState: string, newState: string) => void;
+  onStateMachineBooleanInputChange?: (
+    inputName: string,
+    oldValue: boolean,
+    newValue: boolean
+  ) => void;
+  onStateMachineNumericInputChange?: (
+    inputName: string,
+    oldValue: number,
+    newValue: number
+  ) => void;
+  onStateMachineStringInputChange?: (
+    inputName: string,
+    oldValue: string,
+    newValue: string
+  ) => void;
+  onStateMachineInputFired?: (inputName: string) => void;
+  onStateMachineCustomEvent?: (message: string) => void;
+  onStateMachineError?: (message: string) => void;
 }
 
 const COMMAND_PLAY = 'play';
@@ -113,20 +182,18 @@ const COMMAND_SET_PLAY_MODE = 'setPlayMode';
 const COMMAND_SET_FRAME = 'setFrame';
 const COMMAND_FREEZE = 'freeze';
 const COMMAND_UNFREEZE = 'unfreeze';
-const COMMAND_SET_START_STATE_MACHINE = 'startStateMachine';
-const COMMAND_SET_STOP_STATE_MACHINE = 'stopStateMachine';
-const COMMAND_SET_LOAD_STATE_MACHINE = 'loadStateMachine';
-const COMMAND_SET_POST_EVENT = 'postEvent';
-const COMMAND_SET_ADD_STATE_MACHINE_EVENT_LISTENER =
-  'addStateMachineEventListener';
-const COMMAND_SET_REMOVE_STATE_MACHINE_EVENT_LISTENER =
-  'removeStateMachineEventListener';
+const COMMAND_STATE_MACHINE_START = 'stateMachineStart';
+const COMMAND_STATE_MACHINE_STOP = 'stateMachineStop';
+const COMMAND_STATE_MACHINE_LOAD = 'stateMachineLoad';
+const COMMAND_STATE_MACHINE_FIRE = 'stateMachineFire';
+const COMMAND_STATE_MACHINE_SET_NUMERIC_INPUT = 'stateMachineSetNumericInput';
+const COMMAND_STATE_MACHINE_SET_STRING_INPUT = 'stateMachineSetStringInput';
+const COMMAND_STATE_MACHINE_SET_BOOLEAN_INPUT = 'stateMachineSetBooleanInput';
 const COMMAND_SET_RESIZE = 'resize';
 const COMMAND_SET_SEGMENT = 'setSegment';
 const COMMAND_SET_MARKER = 'setMarker';
-const COMMAND_SET_LOAD_THEME = 'loadTheme';
+const COMMAND_SET_THEME = 'setTheme';
 const COMMAND_SET_LOAD_ANIMATION = 'loadAnimation';
-const COMMAND_SET_MANIFEST = 'manifest';
 
 const ComponentName = 'DotlottieReactNativeView';
 
@@ -144,252 +211,294 @@ export const DotLottie = forwardRef(
     const nativeRef = useRef(null);
 
     const playWithUIManager = useCallback(() => {
-      const command = NativeViewManager.Commands[COMMAND_PLAY];
-      if (command) {
-        UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          []
-        );
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) {
+        console.warn('play() - nativeRef is null');
+        return;
+      }
+
+      const command = NativeViewManager?.Commands?.[COMMAND_PLAY];
+
+      if (command !== undefined) {
+        // Use command ID (older RN versions)
+        UIManager.dispatchViewManagerCommand(nodeHandle, command, []);
+      } else {
+        // Fallback: Use command name as string (newer RN versions / iOS)
+        UIManager.dispatchViewManagerCommand(nodeHandle, COMMAND_PLAY, []);
       }
     }, []);
 
     const pauseWithUIManager = useCallback(() => {
-      const command = NativeViewManager.Commands[COMMAND_PAUSE];
-      if (command) {
-        UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          []
-        );
-      }
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_PAUSE];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_PAUSE,
+        []
+      );
     }, []);
 
     const stopWithUIManager = useCallback(() => {
-      const command = NativeViewManager.Commands[COMMAND_STOP];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          []
-        );
-      }
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_STOP];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_STOP,
+        []
+      );
     }, []);
 
     const setLoopWithUIManager = useCallback((value: boolean) => {
-      const command = NativeViewManager.Commands[COMMAND_SET_LOOP];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          [value]
-        );
-      }
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_SET_LOOP];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_SET_LOOP,
+        [value]
+      );
     }, []);
 
     const setSpeedWithUIManager = useCallback((value: number) => {
-      const command = NativeViewManager.Commands[COMMAND_SET_SPEED];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          [value]
-        );
-      }
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_SET_SPEED];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_SET_SPEED,
+        [value]
+      );
     }, []);
 
     const setPlayModeWithUIManager = useCallback((mode: Mode) => {
-      const command = NativeViewManager.Commands[COMMAND_SET_PLAY_MODE];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          [mode]
-        );
-      }
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_SET_PLAY_MODE];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_SET_PLAY_MODE,
+        [mode]
+      );
     }, []);
 
     const setFrameWithUIManager = useCallback((frame: number) => {
-      const command = NativeViewManager.Commands[COMMAND_SET_FRAME];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          [frame]
-        );
-      }
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_SET_FRAME];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_SET_FRAME,
+        [frame]
+      );
     }, []);
 
     const freezeWithUIManager = useCallback(() => {
-      const command = NativeViewManager.Commands[COMMAND_FREEZE];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          []
-        );
-      }
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_FREEZE];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_FREEZE,
+        []
+      );
     }, []);
 
     const unfreezeWithUIManager = useCallback(() => {
-      const command = NativeViewManager.Commands[COMMAND_UNFREEZE];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          []
-        );
-      }
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_UNFREEZE];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_UNFREEZE,
+        []
+      );
     }, []);
 
     const setSegmentWithUIManager = useCallback(
       (start: number, end: number) => {
-        const command = NativeViewManager.Commands[COMMAND_SET_SEGMENT];
-        if (command) {
-          return UIManager.dispatchViewManagerCommand(
-            findNodeHandle(nativeRef.current),
-            command,
-            [start, end]
-          );
-        }
+        const nodeHandle = findNodeHandle(nativeRef.current);
+        if (!nodeHandle) return;
+
+        const command = NativeViewManager?.Commands?.[COMMAND_SET_SEGMENT];
+        UIManager.dispatchViewManagerCommand(
+          nodeHandle,
+          command !== undefined ? command : COMMAND_SET_SEGMENT,
+          [start, end]
+        );
       },
       []
     );
 
-    const startStateMachineWithUIManager = useCallback(
+    const stateMachineStartWithUIManager = useCallback(() => {
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command =
+        NativeViewManager?.Commands?.[COMMAND_STATE_MACHINE_START];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_STATE_MACHINE_START,
+        []
+      );
+    }, []);
+
+    const stateMachineStopWithUIManager = useCallback(() => {
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_STATE_MACHINE_STOP];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_STATE_MACHINE_STOP,
+        []
+      );
+    }, []);
+
+    const stateMachineLoadWithUIManager = useCallback(
       (stateMachineId: string) => {
+        const nodeHandle = findNodeHandle(nativeRef.current);
+        if (!nodeHandle) return;
+
         const command =
-          NativeViewManager.Commands[COMMAND_SET_START_STATE_MACHINE];
-        if (command) {
-          return UIManager.dispatchViewManagerCommand(
-            findNodeHandle(nativeRef.current),
-            command,
-            [stateMachineId]
-          );
-        }
+          NativeViewManager?.Commands?.[COMMAND_STATE_MACHINE_LOAD];
+        UIManager.dispatchViewManagerCommand(
+          nodeHandle,
+          command !== undefined ? command : COMMAND_STATE_MACHINE_LOAD,
+          [stateMachineId]
+        );
       },
       []
     );
 
-    const stopStateMachineWithUIManager = useCallback(() => {
-      const command =
-        NativeViewManager.Commands[COMMAND_SET_STOP_STATE_MACHINE];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          []
-        );
-      }
+    const stateMachineFireWithUIManager = useCallback((event: string) => {
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_STATE_MACHINE_FIRE];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_STATE_MACHINE_FIRE,
+        [event]
+      );
     }, []);
 
-    const loadStateMachineWithUIManager = useCallback(
-      (stateMachineId: string) => {
+    const stateMachineSetNumericInputWithUIManager = useCallback(
+      (key: string, value: number) => {
+        const nodeHandle = findNodeHandle(nativeRef.current);
+        if (!nodeHandle) return false;
+
         const command =
-          NativeViewManager.Commands[COMMAND_SET_LOAD_STATE_MACHINE];
-        if (command) {
-          return UIManager.dispatchViewManagerCommand(
-            findNodeHandle(nativeRef.current),
-            command,
-            [stateMachineId]
-          );
-        }
+          NativeViewManager?.Commands?.[
+            COMMAND_STATE_MACHINE_SET_NUMERIC_INPUT
+          ];
+        UIManager.dispatchViewManagerCommand(
+          nodeHandle,
+          command !== undefined
+            ? command
+            : COMMAND_STATE_MACHINE_SET_NUMERIC_INPUT,
+          [key, value]
+        );
+        return true;
       },
       []
     );
 
-    const postEventWithUIManager = useCallback((x: number, y: number) => {
-      const command = NativeViewManager.Commands[COMMAND_SET_POST_EVENT];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          [x, y]
-        );
-      }
-    }, []);
+    const stateMachineSetStringInputWithUIManager = useCallback(
+      (key: string, value: string) => {
+        const nodeHandle = findNodeHandle(nativeRef.current);
+        if (!nodeHandle) return false;
 
-    const addStateMachineEventListenerWithUIManager = useCallback(() => {
-      const command =
-        NativeViewManager.Commands[
-          COMMAND_SET_ADD_STATE_MACHINE_EVENT_LISTENER
-        ];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          []
+        const command =
+          NativeViewManager?.Commands?.[COMMAND_STATE_MACHINE_SET_STRING_INPUT];
+        UIManager.dispatchViewManagerCommand(
+          nodeHandle,
+          command !== undefined
+            ? command
+            : COMMAND_STATE_MACHINE_SET_STRING_INPUT,
+          [key, value]
         );
-      }
-    }, []);
+        return true;
+      },
+      []
+    );
 
-    const removeStateMachineEventListenerWithUIManager = useCallback(() => {
-      const command =
-        NativeViewManager.Commands[
-          COMMAND_SET_REMOVE_STATE_MACHINE_EVENT_LISTENER
-        ];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          []
+    const stateMachineSetBooleanInputWithUIManager = useCallback(
+      (key: string, value: boolean) => {
+        const nodeHandle = findNodeHandle(nativeRef.current);
+        if (!nodeHandle) return false;
+
+        const command =
+          NativeViewManager?.Commands?.[
+            COMMAND_STATE_MACHINE_SET_BOOLEAN_INPUT
+          ];
+        UIManager.dispatchViewManagerCommand(
+          nodeHandle,
+          command !== undefined
+            ? command
+            : COMMAND_STATE_MACHINE_SET_BOOLEAN_INPUT,
+          [key, value]
         );
-      }
-    }, []);
+        return true;
+      },
+      []
+    );
 
     const resizeWithUIManager = useCallback((width: number, height: number) => {
-      const command = NativeViewManager.Commands[COMMAND_SET_RESIZE];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          [width, height]
-        );
-      }
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_SET_RESIZE];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_SET_RESIZE,
+        [width, height]
+      );
     }, []);
 
     const setMarkerWithUIManager = useCallback((marker: string) => {
-      const command = NativeViewManager.Commands[COMMAND_SET_MARKER];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          [marker]
-        );
-      }
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_SET_MARKER];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_SET_MARKER,
+        [marker]
+      );
     }, []);
 
-    const loadThemeWithUIManager = useCallback((themeId: string) => {
-      const command = NativeViewManager.Commands[COMMAND_SET_LOAD_THEME];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          [themeId]
-        );
-      }
+    const setThemeWithUIManager = useCallback((themeId: string) => {
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
+
+      const command = NativeViewManager?.Commands?.[COMMAND_SET_THEME];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_SET_THEME,
+        [themeId]
+      );
     }, []);
 
     const loadAnimationWithUIManager = useCallback((animationId: string) => {
-      const command = NativeViewManager.Commands[COMMAND_SET_LOAD_ANIMATION];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          [animationId]
-        );
-      }
-    }, []);
+      const nodeHandle = findNodeHandle(nativeRef.current);
+      if (!nodeHandle) return;
 
-    const setManifestWithUIManager = useCallback(() => {
-      const command = NativeViewManager.Commands[COMMAND_SET_MANIFEST];
-      if (command) {
-        return UIManager.dispatchViewManagerCommand(
-          findNodeHandle(nativeRef.current),
-          command,
-          []
-        );
-      }
+      const command = NativeViewManager?.Commands?.[COMMAND_SET_LOAD_ANIMATION];
+      UIManager.dispatchViewManagerCommand(
+        nodeHandle,
+        command !== undefined ? command : COMMAND_SET_LOAD_ANIMATION,
+        [animationId]
+      );
     }, []);
 
     useImperativeHandle(ref, () => ({
@@ -402,19 +511,18 @@ export const DotLottie = forwardRef(
       setFrame: setFrameWithUIManager,
       freeze: freezeWithUIManager,
       unfreeze: unfreezeWithUIManager,
-      startStateMachine: startStateMachineWithUIManager,
-      stopStateMachine: stopStateMachineWithUIManager,
-      loadStateMachine: loadStateMachineWithUIManager,
-      postEvent: postEventWithUIManager,
-      addStateMachineEventListener: addStateMachineEventListenerWithUIManager,
-      removeStateMachineEventListener:
-        removeStateMachineEventListenerWithUIManager,
+      stateMachineStart: stateMachineStartWithUIManager,
+      stateMachineStop: stateMachineStopWithUIManager,
+      stateMachineLoad: stateMachineLoadWithUIManager,
+      stateMachineFire: stateMachineFireWithUIManager,
+      stateMachineSetNumericInput: stateMachineSetNumericInputWithUIManager,
+      stateMachineSetStringInput: stateMachineSetStringInputWithUIManager,
+      stateMachineSetBooleanInput: stateMachineSetBooleanInputWithUIManager,
       resize: resizeWithUIManager,
       setSegment: setSegmentWithUIManager,
       setMarker: setMarkerWithUIManager,
-      loadTheme: loadThemeWithUIManager,
+      setTheme: setThemeWithUIManager,
       loadAnimation: loadAnimationWithUIManager,
-      setManifest: setManifestWithUIManager,
     }));
 
     const parsedSource = parseSource(source);
@@ -422,12 +530,58 @@ export const DotLottie = forwardRef(
     return (
       <DotlottieReactNativeView
         ref={nativeRef}
-        loop={false}
-        autoplay={false}
         source={parsedSource || ''}
         {...props}
         onLoop={(event) => {
           props.onLoop?.(event.nativeEvent.loopCount);
+        }}
+        onFrame={(event) => {
+          props.onFrame?.(event.nativeEvent.frameNo);
+        }}
+        onRender={(event) => {
+          props.onRender?.(event.nativeEvent.frameNo);
+        }}
+        onStateMachineStateEntered={(event) => {
+          props.onStateMachineStateEntered?.(event.nativeEvent.enteringState);
+        }}
+        onStateMachineStateExit={(event) => {
+          props.onStateMachineStateExit?.(event.nativeEvent.leavingState);
+        }}
+        onStateMachineTransition={(event) => {
+          props.onStateMachineTransition?.(
+            event.nativeEvent.previousState,
+            event.nativeEvent.newState
+          );
+        }}
+        onStateMachineBooleanInputChange={(event) => {
+          props.onStateMachineBooleanInputChange?.(
+            event.nativeEvent.inputName,
+            event.nativeEvent.oldValue,
+            event.nativeEvent.newValue
+          );
+        }}
+        onStateMachineNumericInputChange={(event) => {
+          props.onStateMachineNumericInputChange?.(
+            event.nativeEvent.inputName,
+            event.nativeEvent.oldValue,
+            event.nativeEvent.newValue
+          );
+        }}
+        onStateMachineStringInputChange={(event) => {
+          props.onStateMachineStringInputChange?.(
+            event.nativeEvent.inputName,
+            event.nativeEvent.oldValue,
+            event.nativeEvent.newValue
+          );
+        }}
+        onStateMachineInputFired={(event) => {
+          props.onStateMachineInputFired?.(event.nativeEvent.inputName);
+        }}
+        onStateMachineCustomEvent={(event) => {
+          props.onStateMachineCustomEvent?.(event.nativeEvent.message);
+        }}
+        onStateMachineError={(event) => {
+          props.onStateMachineError?.(event.nativeEvent.message);
         }}
       />
     );

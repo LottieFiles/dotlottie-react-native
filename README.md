@@ -113,24 +113,89 @@ const styles = StyleSheet.create({
 });
 ```
 
-## Props and Methods
+## API Reference
 
-| Prop/Method                         | Type                           | Default Value | Description                                                       |
-| ----------------------------------- | ------------------------------ | ------------- | ----------------------------------------------------------------- |
-| `source`                            | `{ uri: string }` or `require` | **Required**  | Specifies the animation file to be loaded.                        |
-| `style`                             | `StyleProp<ViewStyle>`         | `undefined`   | Custom styles for the animation container.                        |
-| `loop`                              | `boolean`                      | `false`       | Determines if the animation should loop continuously.             |
-| `autoplay`                          | `boolean`                      | `false`       | Determines if the animation should start playing automatically.   |
-| `ref`                               | `React.RefObject<Dotlottie>`   | `null`        | Reference to control the animation programmatically.              |
-| `play()`                            | `function`                     | N/A           | Starts playing the animation.                                     |
-| `pause()`                           | `function`                     | N/A           | Pauses the animation.                                             |
-| `stop()`                            | `function`                     | N/A           | Stops the animation and resets to the beginning.                  |
-| `setLoop(loop: boolean)`            | `function`                     | N/A           | Sets the looping behavior of the animation.                       |
-| `setSpeed(speed: number)`           | `function`                     | N/A           | Sets the playback speed of the animation.                         |
-| `setPlayMode(mode: Mode)`           | `function`                     | N/A           | Sets the play mode (`FORWARD` or `REVERSE`) of the animation.     |
-| `startStateMachine(name: string)`   | `function`                     | N/A           | Initiates a state machine by name for advanced animation control. |
-| `removeStateMachineEventListener()` | `function`                     | N/A           | Removes event listeners associated with the state machine.        |
-| `stopStateMachine()`                | `function`                     | N/A           | Stops the state machine controlling the animation.                |
+### Props
+
+| Prop                     | Type                           | Default Value | Description                                                         |
+| ------------------------ | ------------------------------ | ------------- | ------------------------------------------------------------------- |
+| `source`                 | `string \| { uri: string }`    | **Required**  | Specifies the animation file to be loaded (local or remote URL).    |
+| `style`                  | `ViewStyle`                    | `undefined`   | Custom styles for the animation container.                          |
+| `loop`                   | `boolean`                      | `false`       | Determines if the animation should loop continuously.               |
+| `autoplay`               | `boolean`                      | `false`       | Determines if the animation should start playing automatically.     |
+| `speed`                  | `number`                       | `1.0`         | The playback speed of the animation (e.g., 0.5, 1, 2).              |
+| `playMode`               | `Mode`                         | `FORWARD`     | The play mode: `FORWARD`, `REVERSE`, `BOUNCE`, `REVERSE_BOUNCE`.   |
+| `useFrameInterpolation`  | `boolean`                      | `false`       | Enables frame interpolation for smoother animations.                |
+| `segment`                | `[number, number]`             | `undefined`   | Specifies a segment of the animation to play `[startFrame, endFrame]`. |
+| `marker`                 | `string`                       | `undefined`   | Specifies a marker to use for playback.                             |
+| `themeId`                | `string`                       | `undefined`   | The theme ID to apply to the animation.                             |
+| `stateMachineId`         | `string`                       | `undefined`   | The ID of the state machine to load and start automatically.        |
+
+### Methods
+
+Access these methods via a ref:
+
+```typescript
+const ref = useRef<Dotlottie>(null);
+ref.current?.play();
+```
+
+| Method                                                          | Description                                                      |
+| --------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `play()`                                                        | Starts playing the animation.                                    |
+| `pause()`                                                       | Pauses the animation.                                            |
+| `stop()`                                                        | Stops the animation and resets to the beginning.                 |
+| `setLoop(loop: boolean)`                                        | Sets the looping behavior of the animation.                      |
+| `setSpeed(speed: number)`                                       | Sets the playback speed of the animation.                        |
+| `setPlayMode(mode: Mode)`                                       | Sets the play mode of the animation.                             |
+| `setFrame(frame: number)`                                       | Sets the current frame of the animation.                         |
+| `freeze()`                                                      | Freezes the animation at the current frame.                      |
+| `unfreeze()`                                                    | Unfreezes the animation.                                         |
+| `resize(width: number, height: number)`                         | Resizes the animation viewport.                                  |
+| `setSegment(start: number, end: number)`                        | Sets a segment of the animation to play.                         |
+| `setMarker(marker: string)`                                     | Sets a marker for playback.                                      |
+| `setTheme(themeId: string)`                                     | Applies a theme to the animation.                                |
+| `loadAnimation(animationId: string)`                            | Loads a specific animation by ID.                                |
+| `stateMachineStart()`                                           | Starts the state machine.                                        |
+| `stateMachineStop()`                                            | Stops the state machine.                                         |
+| `stateMachineLoad(stateMachineId: string)`                      | Loads a state machine by ID.                                     |
+| `stateMachineFire(event: string)`                               | Fires an event in the state machine.                             |
+| `stateMachineSetNumericInput(key: string, value: number)`       | Sets a numeric input value in the state machine.                 |
+| `stateMachineSetStringInput(key: string, value: string)`        | Sets a string input value in the state machine.                  |
+| `stateMachineSetBooleanInput(key: string, value: boolean)`      | Sets a boolean input value in the state machine.                 |
+
+### Events
+
+| Event                                                                     | Description                                                      |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `onLoad?: () => void`                                                     | Called when the animation is loaded.                             |
+| `onComplete?: () => void`                                                 | Called when the animation completes.                             |
+| `onLoadError?: () => void`                                                | Called when there's an error loading the animation.              |
+| `onPlay?: () => void`                                                     | Called when the animation starts playing.                        |
+| `onPause?: () => void`                                                    | Called when the animation is paused.                             |
+| `onStop?: () => void`                                                     | Called when the animation is stopped.                            |
+| `onLoop?: (loopCount: number) => void`                                    | Called when the animation loops, with the current loop count.    |
+| `onFrame?: (frameNo: number) => void`                                     | Called on each frame update.                                     |
+| `onRender?: (frameNo: number) => void`                                    | Called when a frame is rendered.                                 |
+| `onFreeze?: () => void`                                                   | Called when the animation is frozen.                             |
+| `onUnFreeze?: () => void`                                                 | Called when the animation is unfrozen.                           |
+| `onDestroy?: () => void`                                                  | Called when the animation is destroyed.                          |
+
+### State Machine Events
+
+| Event                                                                                         | Description                                                      |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `onStateMachineStart?: () => void`                                                            | Called when the state machine starts.                            |
+| `onStateMachineStop?: () => void`                                                             | Called when the state machine stops.                             |
+| `onStateMachineStateEntered?: (enteringState: string) => void`                                | Called when entering a new state.                                |
+| `onStateMachineStateExit?: (leavingState: string) => void`                                    | Called when exiting a state.                                     |
+| `onStateMachineTransition?: (previousState: string, newState: string) => void`                | Called during a state transition.                                |
+| `onStateMachineBooleanInputChange?: (inputName: string, oldValue: boolean, newValue: boolean) => void` | Called when a boolean input changes.                    |
+| `onStateMachineNumericInputChange?: (inputName: string, oldValue: number, newValue: number) => void`   | Called when a numeric input changes.                    |
+| `onStateMachineStringInputChange?: (inputName: string, oldValue: string, newValue: string) => void`    | Called when a string input changes.                     |
+| `onStateMachineInputFired?: (inputName: string) => void`                                      | Called when an input event is fired.                             |
+| `onStateMachineCustomEvent?: (message: string) => void`                                       | Called when a custom state machine event occurs.                 |
+| `onStateMachineError?: (message: string) => void`                                             | Called when a state machine error occurs.                        |
 
 ## Contributing
 

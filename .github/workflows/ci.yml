@@ -140,6 +140,7 @@ jobs:
         with:
           path: |
             **/ios/Pods
+            **/ios/build/generated/ios
           key: ${{ runner.os }}-cocoapods-${{ hashFiles('example/ios/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-cocoapods-

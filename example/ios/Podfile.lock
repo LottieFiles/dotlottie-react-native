@@ -1,6 +1,6 @@
 PODS:
   - boost (1.83.0)
-  - dotlottie-react-native (0.4.0):
+  - dotlottie-react-native (0.5.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1369,7 +1369,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
-  dotlottie-react-native: 2dca6e93d8a88e7aec97ae35a58ac97b1d578af6
+  dotlottie-react-native: 4af39b18e4aa8d5deb28e635aa5975b7038c62b1
   DoubleConversion: 76ab83afb40bddeeee456813d9c04f67f78771b5
   FBLazyVector: ac12dc084d1c8ec4cc4d7b3cf1b0ebda6dab85af
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
@@ -1428,4 +1428,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 4a9daf08dfcda3ac66e0b9e1e6316e5fc85ee0e2
 
-COCOAPODS: 1.14.3
+COCOAPODS: 1.16.2

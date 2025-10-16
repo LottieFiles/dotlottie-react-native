@@ -8,7 +8,6 @@ function parseSource(source: { uri: string } | string): string | undefined {
   }
 
   if (typeof source === 'number') {
-    console.log('numberSOurce', Image.resolveAssetSource(source).uri);
     return Image.resolveAssetSource(source).uri;
   }
 

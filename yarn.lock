@@ -6765,6 +6765,7 @@ __metadata:
     react-dom: 18.2.0
     react-native: 0.74.5
     react-native-builder-bob: ^0.29.0
+    react-native-element-dropdown: ^2.12.4
     react-native-web: ^0.21.1
     webpack: ^5.102.1
     webpack-cli: ^6.0.1
@@ -12553,6 +12554,18 @@ __metadata:
   bin:
     bob: bin/bob
   checksum: 2af3139966a37ae07346e3e29a225e0df2a6e5421972288a83d770ec62d91643e32871e7b2b4cb12c59ac21d90c7b580f8ce3bc5bf9785c59960e03613cf1a4d
+  languageName: node
+  linkType: hard
+
+"react-native-element-dropdown@npm:^2.12.4":
+  version: 2.12.4
+  resolution: "react-native-element-dropdown@npm:2.12.4"
+  dependencies:
+    lodash: ^4.17.21
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 4ac8962df350beb1a89d7994c4a96f06a5956f5ca7755e41b93c4d23873eedf4150903be74bbab8ebba9710da07c0c93ab29d2ff4345db797898ffef198bbadf
   languageName: node
   linkType: hard
 
