@@ -5,12 +5,14 @@ buildscript {
   repositories {
     google()
     mavenCentral()
+    gradlePluginPortal()
   }
 
   dependencies {
-    classpath "com.android.tools.build:gradle:7.2.1"
+    classpath "com.android.tools.build:gradle:8.7.3"
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    classpath "org.jetbrains.kotlin.plugin.compose:org.jetbrains.kotlin.plugin.compose.gradle.plugin:$kotlin_version"
   }
 }
 
@@ -25,6 +27,7 @@ def isNewArchitectureEnabled() {
 
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
+apply plugin: "org.jetbrains.kotlin.plugin.compose"
 
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
@@ -62,9 +65,8 @@ android {
        compose = true
   }
 
-  composeOptions {
-       kotlinCompilerExtensionVersion = "1.5.10"
-  }
+  // composeOptions is no longer needed with Kotlin 2.0+ Compose Compiler plugin
+  // The plugin automatically manages the Compose Compiler version
 
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
@@ -105,9 +107,9 @@ dependencies {
   implementation "com.facebook.react:react-native:+"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "com.github.LottieFiles:dotlottie-android:0.12.2"
-  implementation 'androidx.compose.ui:ui:1.5.0'
-  implementation 'androidx.compose.material:material:1.5.0'
-  implementation 'androidx.compose.ui:ui-tooling-preview:1.5.0'
-  implementation 'androidx.activity:activity-compose:1.8.0'
+  implementation 'androidx.compose.ui:ui:1.7.6'
+  implementation 'androidx.compose.material:material:1.7.6'
+  implementation 'androidx.compose.ui:ui-tooling-preview:1.7.6'
+  implementation 'androidx.activity:activity-compose:1.9.3'
 }
 
