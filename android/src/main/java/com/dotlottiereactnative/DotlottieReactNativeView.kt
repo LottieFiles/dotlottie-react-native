@@ -296,15 +296,21 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   }
 
   private fun cleanup() {
-    dotLottieController.stop()
+    try {
+      dotLottieController.stop()
 
-    if (dotLottieController.stateMachineIsActive) {
-      dotLottieController.stateMachineStop()
+      if (dotLottieController.stateMachineIsActive) {
+        dotLottieController.stateMachineStop()
+      }
+
+      dotLottieController.stateMachineRemoveEventListener(stateMachineEventListener)
+      dotLottieController.clearEventListeners()
+    } catch (e: IllegalStateException) {
+      android.util.Log.w("DotLottie", "cleanup called on already destroyed player: ${e.message}")
+    } catch (e: Exception) {
+      android.util.Log.e("DotLottie", "Error during cleanup: ${e.message}")
+    } finally {
+      composeView.disposeComposition()
     }
-
-    dotLottieController.stateMachineRemoveEventListener(stateMachineEventListener)
-    dotLottieController.clearEventListeners()
-
-    composeView.disposeComposition()
   }
 }
