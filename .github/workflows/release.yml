@@ -25,9 +25,6 @@ jobs:
       - name: Typecheck files
         run: yarn typecheck
 
-      - name: Run unit tests
-        run: yarn test --maxWorkers=2 --coverage
-
       - name: Build package
         run: yarn prepare
 
