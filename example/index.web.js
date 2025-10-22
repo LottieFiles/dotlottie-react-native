@@ -1,7 +1,7 @@
 import { AppRegistry } from 'react-native';
-import App from './src/App';
+import App from './App';
 
-const appName = 'DotlottieReactNativeExample';
+const appName = 'example';
 
 AppRegistry.registerComponent(appName, () => App);
 AppRegistry.runApplication(appName, {

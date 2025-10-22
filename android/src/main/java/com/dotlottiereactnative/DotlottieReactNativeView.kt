@@ -31,6 +31,9 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var stateMachineId: String? = null
   var dotLottieController: DotLottieController = DotLottieController()
   private val stateMachineEventListener: StateMachineEventListener = createStateMachineEventListener()
+  private var stateMachineListenerRegistered: Boolean = false
+  private var hasActiveComposition: Boolean = false
+  private var isReleased: Boolean = false
 
   private val composeView: ComposeView =
           ComposeView(context).apply {
@@ -39,8 +42,8 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
 
   init {
     addView(composeView)
-    dotLottieController.stateMachineAddEventListener(stateMachineEventListener)
-    composeView.setContent { DotLottieContent() }
+    ensureStateMachineListener()
+    renderContent()
   }
 
   fun onReceiveNativeEvent(eventName: String, value: WritableMap?) {
@@ -122,7 +125,9 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
 
   fun setSource(url: String?) {
     animationUrl = url
-    composeView.setContent { DotLottieContent() }
+    if (!isReleased) {
+      renderContent()
+    }
   }
 
   fun setLoop(value: Boolean) {
@@ -206,6 +211,50 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
 
   fun resize(width: UInt, height: UInt) {
     dotLottieController.resize(width, height)
+  }
+
+  fun getTotalFrames(): Float {
+    return dotLottieController.totalFrames
+  }
+
+  fun getDuration(): Float {
+    return dotLottieController.duration
+  }
+
+  fun getSpeed(): Float {
+    return dotLottieController.speed
+  }
+
+  fun getCurrentFrame(): Float {
+    return dotLottieController.currentFrame
+  }
+
+  fun isPaused(): Boolean {
+    return dotLottieController.isPaused
+  }
+
+  fun isPlaying(): Boolean {
+    return dotLottieController.isPlaying
+  }
+
+  fun isStopped(): Boolean {
+    return dotLottieController.isStopped
+  }
+
+  fun isLoaded(): Boolean {
+    return dotLottieController.isLoaded
+  }
+
+  fun getActiveThemeId(): String {
+    return dotLottieController.activeThemeId
+  }
+
+  fun getActiveAnimationId(): String {
+    return dotLottieController.activeAnimationId
+  }
+
+  fun getLoopCount(): Int {
+    return dotLottieController.loopCount.toInt()
   }
 
   private fun createStateMachineEventListener(): StateMachineEventListener {
@@ -295,7 +344,29 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     cleanup()
   }
 
+  override fun onAttachedToWindow() {
+    super.onAttachedToWindow()
+    if (isReleased) {
+      return
+    }
+    ensureStateMachineListener()
+    if (!hasActiveComposition) {
+      renderContent()
+    }
+  }
+
+  fun release() {
+    if (isReleased) {
+      return
+    }
+    isReleased = true
+    cleanup()
+  }
+
   private fun cleanup() {
+    if (!hasActiveComposition && !stateMachineListenerRegistered) {
+      return
+    }
     try {
       dotLottieController.stop()
 
@@ -303,14 +374,33 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
         dotLottieController.stateMachineStop()
       }
 
-      dotLottieController.stateMachineRemoveEventListener(stateMachineEventListener)
+      if (stateMachineListenerRegistered) {
+        dotLottieController.stateMachineRemoveEventListener(stateMachineEventListener)
+        stateMachineListenerRegistered = false
+      }
+
       dotLottieController.clearEventListeners()
     } catch (e: IllegalStateException) {
       android.util.Log.w("DotLottie", "cleanup called on already destroyed player: ${e.message}")
     } catch (e: Exception) {
       android.util.Log.e("DotLottie", "Error during cleanup: ${e.message}")
     } finally {
-      composeView.disposeComposition()
+      if (hasActiveComposition) {
+        composeView.disposeComposition()
+        hasActiveComposition = false
+      }
     }
+  }
+
+  private fun ensureStateMachineListener() {
+    if (!stateMachineListenerRegistered) {
+      dotLottieController.stateMachineAddEventListener(stateMachineEventListener)
+      stateMachineListenerRegistered = true
+    }
+  }
+
+  private fun renderContent() {
+    composeView.setContent { DotLottieContent() }
+    hasActiveComposition = true
   }
 }

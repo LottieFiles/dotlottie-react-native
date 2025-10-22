@@ -2,10 +2,12 @@ package com.dotlottiereactnative
 
 import com.dotlottie.dlplayer.Mode
 import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.common.annotations.internal.InteropLegacyArchitecture
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
 
+@InteropLegacyArchitecture
 class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeView>() {
 
   override fun getName() = "DotlottieReactNativeView"
@@ -43,33 +45,40 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
     )
   }
 
-  override fun getExportedCustomBubblingEventTypeConstants(): Map<String, Any> {
-    return getEventTypeConstants(
-            "onLoad",
-            "onComplete",
-            "onLoadError",
-            "onPlay",
-            "onLoop",
-            "onDestroy",
-            "onUnFreeze",
-            "onFreeze",
-            "onPause",
-            "onFrame",
-            "onStop",
-            "onRender",
-            "onStateMachineStart",
-            "onStateMachineStop",
-            "onStateMachineStateEntered",
-            "onStateMachineStateExit",
-            "onStateMachineTransition",
-            "onStateMachineBooleanInputChange",
-            "onStateMachineNumericInputChange",
-            "onStateMachineStringInputChange",
-            "onStateMachineInputFired",
-            "onStateMachineCustomEvent",
-            "onStateMachineError"
-    )
-  }
+  private val bubblingEvents = arrayOf(
+          "onLoad",
+          "onComplete",
+          "onLoadError",
+          "onPlay",
+          "onLoop",
+          "onDestroy",
+          "onUnFreeze",
+          "onFreeze",
+          "onPause",
+          "onFrame",
+          "onStop",
+          "onRender"
+  )
+
+  private val directEvents = arrayOf(
+          "onStateMachineStart",
+          "onStateMachineStop",
+          "onStateMachineStateEntered",
+          "onStateMachineStateExit",
+          "onStateMachineTransition",
+          "onStateMachineBooleanInputChange",
+          "onStateMachineNumericInputChange",
+          "onStateMachineStringInputChange",
+          "onStateMachineInputFired",
+          "onStateMachineCustomEvent",
+          "onStateMachineError"
+  )
+
+  override fun getExportedCustomBubblingEventTypeConstants(): Map<String, Any> =
+          getBubblingEventTypeConstants(*bubblingEvents)
+
+  override fun getExportedCustomDirectEventTypeConstants(): Map<String, Any> =
+          getDirectEventTypeConstants(*directEvents)
 
   override fun receiveCommand(
           view: DotlottieReactNativeView,
@@ -224,6 +233,11 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
   @ReactProp(name = "stateMachineId")
   fun setStateMachineId(view: DotlottieReactNativeView, value: String?) {
     view.setStateMachineId(value)
+  }
+
+  override fun onDropViewInstance(view: DotlottieReactNativeView) {
+    super.onDropViewInstance(view)
+    view.release()
   }
 
   companion object {

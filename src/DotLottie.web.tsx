@@ -24,18 +24,25 @@ export type Dotlottie = {
   setFrame: (frame: number) => void;
   freeze: () => void;
   unfreeze: () => void;
-  startStateMachine: (stateMachineId: string) => void;
-  stopStateMachine: () => void;
-  loadStateMachine: (stateMachineId: string) => void;
-  postEvent: (x: number, y: number) => void;
-  addStateMachineEventListener: () => void;
-  removeStateMachineEventListener: () => void;
+  stateMachineStart: () => void;
+  stateMachineStop: () => void;
+  stateMachineLoad: (stateMachineId: string) => void;
   resize: (width: number, height: number) => void;
   setSegment: (start: number, end: number) => void;
   setMarker: (marker: string) => void;
   loadTheme: (themeId: string) => void;
   loadAnimation: (animationId: string) => void;
-  setManifest: () => void;
+  totalFrames: () => Promise<number>;
+  duration: () => Promise<number>;
+  speed: () => Promise<number>;
+  currentFrame: () => Promise<number>;
+  isPaused: () => Promise<boolean>;
+  isPlaying: () => Promise<boolean>;
+  isStopped: () => Promise<boolean>;
+  isLoaded: () => Promise<boolean>;
+  activeThemeId: () => Promise<string>;
+  activeAnimationId: () => Promise<string>;
+  loopCount: () => Promise<number>;
 };
 
 interface DotlottieReactNativeProps {
@@ -63,9 +70,6 @@ interface DotlottieReactNativeProps {
   onFrame?: (frame: number) => void;
   onStop?: () => void;
   onRender?: (frame: number) => void;
-  onTransition?: (state: { previousState: string; newState: string }) => void;
-  onStateExit?: (state: { leavingState: string }) => void;
-  onStateEntered?: (state: { enteringState: string }) => void;
 }
 
 export const DotLottie = forwardRef(
@@ -93,9 +97,6 @@ export const DotLottie = forwardRef(
       onFrame,
       onStop,
       onRender,
-      onTransition: _onTransition,
-      onStateExit: _onStateExit,
-      onStateEntered: _onStateEntered,
     }: DotlottieReactNativeProps,
     ref
   ) => {
@@ -215,12 +216,12 @@ export const DotLottie = forwardRef(
       unfreeze: () => {
         dotLottieRef.current?.unfreeze();
       },
-      startStateMachine: () => {
+      stateMachineStart: () => {
         if (dotLottieRef.current) {
           (dotLottieRef.current as any).stateMachineStart?.();
         }
       },
-      stopStateMachine: () => {
+      stateMachineStop: () => {
         if (dotLottieRef.current) {
           (dotLottieRef.current as any).stateMachineStop?.();
         }
@@ -245,8 +246,38 @@ export const DotLottie = forwardRef(
       loadAnimation: (animationId: string) => {
         dotLottieRef.current?.loadAnimation(animationId);
       },
-      setManifest: () => {
-        // FIXME: Not needed!!
+      totalFrames: async () => {
+        return dotLottieRef.current?.totalFrames ?? 0;
+      },
+      duration: async () => {
+        return dotLottieRef.current?.duration ?? 0;
+      },
+      speed: async () => {
+        return dotLottieRef.current?.speed ?? 0;
+      },
+      currentFrame: async () => {
+        return dotLottieRef.current?.currentFrame ?? 0;
+      },
+      isPaused: async () => {
+        return dotLottieRef.current?.isPaused ?? false;
+      },
+      isPlaying: async () => {
+        return dotLottieRef.current?.isPlaying ?? false;
+      },
+      isStopped: async () => {
+        return dotLottieRef.current?.isStopped ?? false;
+      },
+      isLoaded: async () => {
+        return dotLottieRef.current?.isLoaded ?? false;
+      },
+      activeThemeId: async () => {
+        return dotLottieRef.current?.activeThemeId ?? '';
+      },
+      activeAnimationId: async () => {
+        return dotLottieRef.current?.activeAnimationId ?? '';
+      },
+      loopCount: async () => {
+        return dotLottieRef.current?.loopCount ?? 0;
       },
     }));
 

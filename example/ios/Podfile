@@ -5,7 +5,7 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-platform :ios, "17.0"
+platform :ios, '15.4'
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
@@ -14,19 +14,20 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
-target 'DotlottieReactNativeExample' do
+target 'example' do
   config = use_native_modules!
+  new_arch_enabled = ENV['RCT_NEW_ARCH_ENABLED'] == '1'
+  fabric_enabled = new_arch_enabled
+  hermes_enabled = use_hermes()
 
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
-    :app_path => "#{Pod::Config.instance.installation_root}/.."
+    :app_path => "#{Pod::Config.instance.installation_root}/..",
+    :new_arch_enabled => new_arch_enabled,
+    :fabric_enabled => fabric_enabled,
+    :hermes_enabled => hermes_enabled
   )
-
-  target 'DotlottieReactNativeExampleTests' do
-    inherit! :complete
-    # Pods for testing
-  end
 
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202

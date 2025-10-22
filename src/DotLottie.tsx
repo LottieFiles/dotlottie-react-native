@@ -4,6 +4,7 @@ import {
   useImperativeHandle,
   useRef,
   type MutableRefObject,
+  type ComponentType,
 } from 'react';
 import {
   requireNativeComponent,
@@ -11,6 +12,7 @@ import {
   Platform,
   type ViewStyle,
   findNodeHandle,
+  NativeModules,
   type NativeSyntheticEvent,
 } from 'react-native';
 import { parseSource } from './utils';
@@ -50,6 +52,17 @@ export type Dotlottie = {
   setMarker: (marker: string) => void;
   setTheme: (themeId: string) => void;
   loadAnimation: (animationId: string) => void;
+  totalFrames: () => Promise<number>;
+  duration: () => Promise<number>;
+  speed: () => Promise<number>;
+  currentFrame: () => Promise<number>;
+  isPaused: () => Promise<boolean>;
+  isPlaying: () => Promise<boolean>;
+  isStopped: () => Promise<boolean>;
+  isLoaded: () => Promise<boolean>;
+  activeThemeId: () => Promise<string>;
+  activeAnimationId: () => Promise<string>;
+  loopCount: () => Promise<number>;
 };
 
 interface DotlottieNativeProps {
@@ -198,308 +211,279 @@ const COMMAND_SET_LOAD_ANIMATION = 'loadAnimation';
 const ComponentName = 'DotlottieReactNativeView';
 
 const NativeViewManager = UIManager.getViewManagerConfig(ComponentName);
+const isNativeModuleAvailable = NativeViewManager != null;
 
-const DotlottieReactNativeView =
-  UIManager.getViewManagerConfig(ComponentName) != null
-    ? requireNativeComponent<DotlottieNativeProps>(ComponentName)
-    : () => {
-        throw new Error(LINKING_ERROR);
-      };
+let hasWarnedMissingNativeModule = false;
+const warnMissingNativeModule = () => {
+  if (hasWarnedMissingNativeModule) {
+    return;
+  }
+  hasWarnedMissingNativeModule = true;
+  console.warn(
+    "'@lottiefiles/dotlottie-react-native' native module not found. " +
+      "If you're using Expo, run 'expo prebuild' and create a development build, " +
+      'or fall back to @lottiefiles/dotlottie-react for managed workflow support.'
+  );
+};
+
+type DotlottieNativeModule = {
+  getTotalFrames: (viewTag: number) => Promise<number>;
+  getDuration: (viewTag: number) => Promise<number>;
+  getSpeed: (viewTag: number) => Promise<number>;
+  getCurrentFrame: (viewTag: number) => Promise<number>;
+  isPaused: (viewTag: number) => Promise<boolean>;
+  isPlaying: (viewTag: number) => Promise<boolean>;
+  isStopped: (viewTag: number) => Promise<boolean>;
+  isLoaded: (viewTag: number) => Promise<boolean>;
+  getActiveThemeId: (viewTag: number) => Promise<string>;
+  getActiveAnimationId: (viewTag: number) => Promise<string>;
+  getLoopCount: (viewTag: number) => Promise<number>;
+};
+
+const NativeMetricsModule: DotlottieNativeModule | undefined =
+  NativeModules?.DotlottieReactNativeModule;
+
+const DotlottieReactNativeView = isNativeModuleAvailable
+  ? requireNativeComponent<DotlottieNativeProps>(ComponentName)
+  : (((_props: DotlottieNativeProps) => {
+      warnMissingNativeModule();
+      return null;
+    }) as ComponentType<DotlottieNativeProps>);
 
 export const DotLottie = forwardRef(
   ({ source, ...props }: DotlottieReactNativeProps, ref) => {
     const nativeRef = useRef(null);
 
+    const dispatchCommand = useCallback(
+      (
+        commandName: string,
+        args: unknown[] = [],
+        warnTag?: string
+      ): boolean => {
+        const nodeHandle = findNodeHandle(nativeRef.current);
+        if (!nodeHandle) {
+          if (warnTag) {
+            console.warn(`${warnTag} - nativeRef is null`);
+          }
+          return false;
+        }
+
+        const commandId = NativeViewManager?.Commands?.[commandName];
+        UIManager.dispatchViewManagerCommand(
+          nodeHandle,
+          commandId !== undefined ? commandId : commandName,
+          args
+        );
+
+        return true;
+      },
+      []
+    );
+
     const playWithUIManager = useCallback(() => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) {
-        console.warn('play() - nativeRef is null');
-        return;
-      }
-
-      const command = NativeViewManager?.Commands?.[COMMAND_PLAY];
-
-      if (command !== undefined) {
-        // Use command ID (older RN versions)
-        UIManager.dispatchViewManagerCommand(nodeHandle, command, []);
-      } else {
-        // Fallback: Use command name as string (newer RN versions / iOS)
-        UIManager.dispatchViewManagerCommand(nodeHandle, COMMAND_PLAY, []);
-      }
-    }, []);
+      dispatchCommand(COMMAND_PLAY, [], 'play()');
+    }, [dispatchCommand]);
 
     const pauseWithUIManager = useCallback(() => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
-
-      const command = NativeViewManager?.Commands?.[COMMAND_PAUSE];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_PAUSE,
-        []
-      );
-    }, []);
+      dispatchCommand(COMMAND_PAUSE);
+    }, [dispatchCommand]);
 
     const stopWithUIManager = useCallback(() => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
+      dispatchCommand(COMMAND_STOP);
+    }, [dispatchCommand]);
 
-      const command = NativeViewManager?.Commands?.[COMMAND_STOP];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_STOP,
-        []
-      );
-    }, []);
+    const setLoopWithUIManager = useCallback(
+      (value: boolean) => {
+        dispatchCommand(COMMAND_SET_LOOP, [value]);
+      },
+      [dispatchCommand]
+    );
 
-    const setLoopWithUIManager = useCallback((value: boolean) => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
+    const setSpeedWithUIManager = useCallback(
+      (value: number) => {
+        dispatchCommand(COMMAND_SET_SPEED, [value]);
+      },
+      [dispatchCommand]
+    );
 
-      const command = NativeViewManager?.Commands?.[COMMAND_SET_LOOP];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_SET_LOOP,
-        [value]
-      );
-    }, []);
+    const setPlayModeWithUIManager = useCallback(
+      (mode: Mode) => {
+        dispatchCommand(COMMAND_SET_PLAY_MODE, [mode]);
+      },
+      [dispatchCommand]
+    );
 
-    const setSpeedWithUIManager = useCallback((value: number) => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
-
-      const command = NativeViewManager?.Commands?.[COMMAND_SET_SPEED];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_SET_SPEED,
-        [value]
-      );
-    }, []);
-
-    const setPlayModeWithUIManager = useCallback((mode: Mode) => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
-
-      const command = NativeViewManager?.Commands?.[COMMAND_SET_PLAY_MODE];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_SET_PLAY_MODE,
-        [mode]
-      );
-    }, []);
-
-    const setFrameWithUIManager = useCallback((frame: number) => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
-
-      const command = NativeViewManager?.Commands?.[COMMAND_SET_FRAME];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_SET_FRAME,
-        [frame]
-      );
-    }, []);
+    const setFrameWithUIManager = useCallback(
+      (frame: number) => {
+        dispatchCommand(COMMAND_SET_FRAME, [frame]);
+      },
+      [dispatchCommand]
+    );
 
     const freezeWithUIManager = useCallback(() => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
-
-      const command = NativeViewManager?.Commands?.[COMMAND_FREEZE];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_FREEZE,
-        []
-      );
-    }, []);
+      dispatchCommand(COMMAND_FREEZE);
+    }, [dispatchCommand]);
 
     const unfreezeWithUIManager = useCallback(() => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
-
-      const command = NativeViewManager?.Commands?.[COMMAND_UNFREEZE];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_UNFREEZE,
-        []
-      );
-    }, []);
+      dispatchCommand(COMMAND_UNFREEZE);
+    }, [dispatchCommand]);
 
     const setSegmentWithUIManager = useCallback(
       (start: number, end: number) => {
-        const nodeHandle = findNodeHandle(nativeRef.current);
-        if (!nodeHandle) return;
-
-        const command = NativeViewManager?.Commands?.[COMMAND_SET_SEGMENT];
-        UIManager.dispatchViewManagerCommand(
-          nodeHandle,
-          command !== undefined ? command : COMMAND_SET_SEGMENT,
-          [start, end]
-        );
+        dispatchCommand(COMMAND_SET_SEGMENT, [start, end]);
       },
-      []
+      [dispatchCommand]
     );
 
     const stateMachineStartWithUIManager = useCallback(() => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
-
-      const command =
-        NativeViewManager?.Commands?.[COMMAND_STATE_MACHINE_START];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_STATE_MACHINE_START,
-        []
-      );
-    }, []);
+      dispatchCommand(COMMAND_STATE_MACHINE_START);
+    }, [dispatchCommand]);
 
     const stateMachineStopWithUIManager = useCallback(() => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
-
-      const command = NativeViewManager?.Commands?.[COMMAND_STATE_MACHINE_STOP];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_STATE_MACHINE_STOP,
-        []
-      );
-    }, []);
+      dispatchCommand(COMMAND_STATE_MACHINE_STOP);
+    }, [dispatchCommand]);
 
     const stateMachineLoadWithUIManager = useCallback(
       (stateMachineId: string) => {
-        const nodeHandle = findNodeHandle(nativeRef.current);
-        if (!nodeHandle) return;
-
-        const command =
-          NativeViewManager?.Commands?.[COMMAND_STATE_MACHINE_LOAD];
-        UIManager.dispatchViewManagerCommand(
-          nodeHandle,
-          command !== undefined ? command : COMMAND_STATE_MACHINE_LOAD,
-          [stateMachineId]
-        );
+        dispatchCommand(COMMAND_STATE_MACHINE_LOAD, [stateMachineId]);
       },
-      []
+      [dispatchCommand]
     );
 
-    const stateMachineFireWithUIManager = useCallback((event: string) => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
-
-      const command = NativeViewManager?.Commands?.[COMMAND_STATE_MACHINE_FIRE];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_STATE_MACHINE_FIRE,
-        [event]
-      );
-    }, []);
+    const stateMachineFireWithUIManager = useCallback(
+      (event: string) => {
+        dispatchCommand(COMMAND_STATE_MACHINE_FIRE, [event]);
+      },
+      [dispatchCommand]
+    );
 
     const stateMachineSetNumericInputWithUIManager = useCallback(
-      (key: string, value: number) => {
-        const nodeHandle = findNodeHandle(nativeRef.current);
-        if (!nodeHandle) return false;
-
-        const command =
-          NativeViewManager?.Commands?.[
-            COMMAND_STATE_MACHINE_SET_NUMERIC_INPUT
-          ];
-        UIManager.dispatchViewManagerCommand(
-          nodeHandle,
-          command !== undefined
-            ? command
-            : COMMAND_STATE_MACHINE_SET_NUMERIC_INPUT,
-          [key, value]
-        );
-        return true;
-      },
-      []
+      (key: string, value: number) =>
+        dispatchCommand(COMMAND_STATE_MACHINE_SET_NUMERIC_INPUT, [key, value]),
+      [dispatchCommand]
     );
 
     const stateMachineSetStringInputWithUIManager = useCallback(
-      (key: string, value: string) => {
-        const nodeHandle = findNodeHandle(nativeRef.current);
-        if (!nodeHandle) return false;
-
-        const command =
-          NativeViewManager?.Commands?.[COMMAND_STATE_MACHINE_SET_STRING_INPUT];
-        UIManager.dispatchViewManagerCommand(
-          nodeHandle,
-          command !== undefined
-            ? command
-            : COMMAND_STATE_MACHINE_SET_STRING_INPUT,
-          [key, value]
-        );
-        return true;
-      },
-      []
+      (key: string, value: string) =>
+        dispatchCommand(COMMAND_STATE_MACHINE_SET_STRING_INPUT, [key, value]),
+      [dispatchCommand]
     );
 
     const stateMachineSetBooleanInputWithUIManager = useCallback(
-      (key: string, value: boolean) => {
-        const nodeHandle = findNodeHandle(nativeRef.current);
-        if (!nodeHandle) return false;
-
-        const command =
-          NativeViewManager?.Commands?.[
-            COMMAND_STATE_MACHINE_SET_BOOLEAN_INPUT
-          ];
-        UIManager.dispatchViewManagerCommand(
-          nodeHandle,
-          command !== undefined
-            ? command
-            : COMMAND_STATE_MACHINE_SET_BOOLEAN_INPUT,
-          [key, value]
-        );
-        return true;
-      },
-      []
+      (key: string, value: boolean) =>
+        dispatchCommand(COMMAND_STATE_MACHINE_SET_BOOLEAN_INPUT, [key, value]),
+      [dispatchCommand]
     );
 
-    const resizeWithUIManager = useCallback((width: number, height: number) => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
+    const resizeWithUIManager = useCallback(
+      (width: number, height: number) => {
+        dispatchCommand(COMMAND_SET_RESIZE, [width, height]);
+      },
+      [dispatchCommand]
+    );
 
-      const command = NativeViewManager?.Commands?.[COMMAND_SET_RESIZE];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_SET_RESIZE,
-        [width, height]
-      );
+    const setMarkerWithUIManager = useCallback(
+      (marker: string) => {
+        dispatchCommand(COMMAND_SET_MARKER, [marker]);
+      },
+      [dispatchCommand]
+    );
+
+    const setThemeWithUIManager = useCallback(
+      (themeId: string) => {
+        dispatchCommand(COMMAND_SET_THEME, [themeId]);
+      },
+      [dispatchCommand]
+    );
+
+    const loadAnimationWithUIManager = useCallback(
+      (animationId: string) => {
+        dispatchCommand(COMMAND_SET_LOAD_ANIMATION, [animationId]);
+      },
+      [dispatchCommand]
+    );
+
+    const resolveHandle = useCallback(() => {
+      const handle = findNodeHandle(nativeRef.current);
+      if (handle == null) {
+        throw new Error('Unable to resolve DotLottie native view handle.');
+      }
+      return handle;
     }, []);
 
-    const setMarkerWithUIManager = useCallback((marker: string) => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
-
-      const command = NativeViewManager?.Commands?.[COMMAND_SET_MARKER];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_SET_MARKER,
-        [marker]
-      );
+    const ensureNativeModule = useCallback(() => {
+      if (!NativeMetricsModule) {
+        warnMissingNativeModule();
+        throw new Error(LINKING_ERROR);
+      }
+      return NativeMetricsModule;
     }, []);
 
-    const setThemeWithUIManager = useCallback((themeId: string) => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
+    const getTotalFramesWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.getTotalFrames(handle);
+    }, [ensureNativeModule, resolveHandle]);
 
-      const command = NativeViewManager?.Commands?.[COMMAND_SET_THEME];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_SET_THEME,
-        [themeId]
-      );
-    }, []);
+    const getDurationWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.getDuration(handle);
+    }, [ensureNativeModule, resolveHandle]);
 
-    const loadAnimationWithUIManager = useCallback((animationId: string) => {
-      const nodeHandle = findNodeHandle(nativeRef.current);
-      if (!nodeHandle) return;
+    const getSpeedWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.getSpeed(handle);
+    }, [ensureNativeModule, resolveHandle]);
 
-      const command = NativeViewManager?.Commands?.[COMMAND_SET_LOAD_ANIMATION];
-      UIManager.dispatchViewManagerCommand(
-        nodeHandle,
-        command !== undefined ? command : COMMAND_SET_LOAD_ANIMATION,
-        [animationId]
-      );
-    }, []);
+    const getCurrentFrameWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.getCurrentFrame(handle);
+    }, [ensureNativeModule, resolveHandle]);
+
+    const isPausedWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.isPaused(handle);
+    }, [ensureNativeModule, resolveHandle]);
+
+    const isPlayingWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.isPlaying(handle);
+    }, [ensureNativeModule, resolveHandle]);
+
+    const isStoppedWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.isStopped(handle);
+    }, [ensureNativeModule, resolveHandle]);
+
+    const isLoadedWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.isLoaded(handle);
+    }, [ensureNativeModule, resolveHandle]);
+
+    const getActiveThemeIdWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.getActiveThemeId(handle);
+    }, [ensureNativeModule, resolveHandle]);
+
+    const getActiveAnimationIdWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.getActiveAnimationId(handle);
+    }, [ensureNativeModule, resolveHandle]);
+
+    const getLoopCountWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.getLoopCount(handle);
+    }, [ensureNativeModule, resolveHandle]);
 
     useImperativeHandle(ref, () => ({
       play: playWithUIManager,
@@ -523,6 +507,17 @@ export const DotLottie = forwardRef(
       setMarker: setMarkerWithUIManager,
       setTheme: setThemeWithUIManager,
       loadAnimation: loadAnimationWithUIManager,
+      totalFrames: getTotalFramesWithNativeModule,
+      duration: getDurationWithNativeModule,
+      speed: getSpeedWithNativeModule,
+      currentFrame: getCurrentFrameWithNativeModule,
+      isPaused: isPausedWithNativeModule,
+      isPlaying: isPlayingWithNativeModule,
+      isStopped: isStoppedWithNativeModule,
+      isLoaded: isLoadedWithNativeModule,
+      activeThemeId: getActiveThemeIdWithNativeModule,
+      activeAnimationId: getActiveAnimationIdWithNativeModule,
+      loopCount: getLoopCountWithNativeModule,
     }));
 
     const parsedSource = parseSource(source);

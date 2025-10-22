@@ -16,13 +16,16 @@
         "types": "./lib/typescript/commonjs/src/index.d.ts",
         "default": "./lib/commonjs/index.js"
       }
-    }
+    },
+    "./plugin": "./plugins/withDotLottie.js",
+    "./plugins/withDotLottie": "./plugins/withDotLottie.js"
   },
   "files": [
     "src",
     "lib",
     "android",
     "ios",
+    "plugins",
     "cpp",
     "*.podspec",
     "!ios/build",
@@ -38,6 +41,18 @@
   ],
   "scripts": {
     "example": "yarn workspace dotlottie-react-native-example",
+    "ios:paper": "yarn workspace dotlottie-react-native-example ios:paper",
+    "ios:fabric": "yarn workspace dotlottie-react-native-example ios:fabric",
+    "ios:paper:build": "yarn workspace dotlottie-react-native-example ios:paper:build",
+    "ios:fabric:build": "yarn workspace dotlottie-react-native-example ios:fabric:build",
+    "android:paper": "yarn workspace dotlottie-react-native-example android:paper",
+    "android:fabric": "yarn workspace dotlottie-react-native-example android:fabric",
+    "android:paper:build": "yarn workspace dotlottie-react-native-example android:paper:build",
+    "android:fabric:build": "yarn workspace dotlottie-react-native-example android:fabric:build",
+    "expo:start": "yarn workspace dotlottie-react-native-expo-example start",
+    "expo:android": "yarn workspace dotlottie-react-native-expo-example android --no-install",
+    "expo:ios": "yarn workspace dotlottie-react-native-expo-example ios",
+    "expo:prebuild": "yarn workspace dotlottie-react-native-expo-example prebuild",
     "test": "jest",
     "typecheck": "tsc",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
@@ -65,39 +80,47 @@
     "url": "https://github.com/LottieFiles/dotlottie-react-native/issues"
   },
   "homepage": "https://github.com/LottieFiles/dotlottie-react-native#readme",
+  "expo": {
+    "plugins": [
+      "./plugin"
+    ]
+  },
   "publishConfig": {
     "access": "public"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.0.2",
     "@evilmartians/lefthook": "^1.5.0",
+    "@expo/config-plugins": "^8.0.0",
     "@react-native/eslint-config": "^0.73.1",
     "@release-it/conventional-changelog": "^10.0.1",
-    "@types/jest": "^29.5.5",
+    "@types/jest": "^29.5.13",
     "@types/react": "^18.2.44",
     "commitlint": "^17.0.2",
     "del-cli": "^5.1.0",
     "eslint": "^8.51.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.1",
-    "jest": "^29.7.0",
+    "jest": "^29.6.3",
     "prettier": "^3.0.3",
-    "react": "18.2.0",
-    "react-native": "0.74.5",
+    "react": "19.1.0",
+    "react-native": "0.81.4",
     "react-native-builder-bob": "^0.29.0",
     "release-it": "^19.0.5",
     "turbo": "^1.10.7",
     "typescript": "^5.2.2"
   },
   "resolutions": {
-    "@types/react": "^18.2.44"
+    "@types/react": "^18.2.44",
+    "expo-dev-menu-interface@npm:1.8.4": "patch:expo-dev-menu-interface@npm:1.8.4#./expo-example/patches/expo-dev-menu-interface+1.8.4.patch"
   },
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
   },
   "workspaces": [
-    "example"
+    "example",
+    "expo-example"
   ],
   "packageManager": "yarn@3.6.1",
   "jest": {
@@ -154,7 +177,8 @@
   },
   "eslintIgnore": [
     "node_modules/",
-    "lib/"
+    "lib/",
+    "example/.prettierrc.js"
   ],
   "prettier": {
     "quoteProps": "consistent",

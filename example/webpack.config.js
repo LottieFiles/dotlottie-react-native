@@ -14,7 +14,7 @@ module.exports = {
         test: /\.(js|jsx|ts|tsx)$/,
         exclude: /node_modules(?!\/@lottiefiles)/,
         include: [
-          path.resolve(__dirname, 'src'),
+          path.resolve(__dirname),
           path.resolve(__dirname, '../src'),
           path.resolve(__dirname, 'node_modules/@lottiefiles'),
         ],
@@ -24,6 +24,7 @@ module.exports = {
             presets: [
               '@babel/preset-env',
               ['@babel/preset-react', { runtime: 'automatic' }],
+              '@babel/preset-typescript',
               '@react-native/babel-preset',
             ],
           },
@@ -73,4 +74,9 @@ module.exports = {
     open: true,
   },
   devtool: 'source-map',
+  ignoreWarnings: [
+    {
+      module: /react-native-element-dropdown/,
+    },
+  ],
 };

@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => min_ios_version_supported }
+  s.platforms    = { :ios => "15.4" }
   s.source       = { :git => "https://github.com/LottieFiles/dotlottie-react-native.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,swift}"
@@ -19,8 +19,6 @@ Pod::Spec.new do |s|
   s.dependency 'LottieFiles-dotLottie-iOS', '~> 0.9'
 
   s.swift_version = '5.0'
-  s.ios.deployment_target = "15.4"
-  s.osx.deployment_target = "12.0"
 
 
   # Use install_modules_dependencies helper to install the dependencies if React Native version >=0.71.0.

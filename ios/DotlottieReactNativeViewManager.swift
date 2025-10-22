@@ -13,34 +13,34 @@ import SwiftUI
   @Published var marker: NSString = ""
   @Published var themeId: NSString = ""
   @Published var stateMachineId: NSString = ""
-  @Published var onPlay: RCTBubblingEventBlock = {_ in }
-  @Published var onLoad: RCTBubblingEventBlock = {_ in }
-  @Published var onLoadError: RCTBubblingEventBlock = {_ in }
-  @Published var onLoop: RCTBubblingEventBlock = {_ in }
-  @Published var onFrame: RCTBubblingEventBlock = {_ in }
-  @Published var onRender: RCTBubblingEventBlock = {_ in }
-  @Published var onComplete: RCTBubblingEventBlock = {_ in }
-  @Published var onPause: RCTBubblingEventBlock = {_ in }
-  @Published var onStop: RCTBubblingEventBlock = {_ in }
+  @Published var onPlay: RCTDirectEventBlock = {_ in }
+  @Published var onLoad: RCTDirectEventBlock = {_ in }
+  @Published var onLoadError: RCTDirectEventBlock = {_ in }
+  @Published var onLoop: RCTDirectEventBlock = {_ in }
+  @Published var onFrame: RCTDirectEventBlock = {_ in }
+  @Published var onRender: RCTDirectEventBlock = {_ in }
+  @Published var onComplete: RCTDirectEventBlock = {_ in }
+  @Published var onPause: RCTDirectEventBlock = {_ in }
+  @Published var onStop: RCTDirectEventBlock = {_ in }
 
   // State machine events
-  @Published var onStateMachineStart: RCTBubblingEventBlock = {_ in }
-  @Published var onStateMachineStop: RCTBubblingEventBlock = {_ in }
-  @Published var onStateMachineStateEntered: RCTBubblingEventBlock = {_ in }
-  @Published var onStateMachineStateExit: RCTBubblingEventBlock = {_ in }
-  @Published var onStateMachineTransition: RCTBubblingEventBlock = {_ in }
-  @Published var onStateMachineBooleanInputChange: RCTBubblingEventBlock = {_ in }
-  @Published var onStateMachineNumericInputChange: RCTBubblingEventBlock = {_ in }
-  @Published var onStateMachineStringInputChange: RCTBubblingEventBlock = {_ in }
-  @Published var onStateMachineInputFired: RCTBubblingEventBlock = {_ in }
-  @Published var onStateMachineCustomEvent: RCTBubblingEventBlock = {_ in }
-  @Published var onStateMachineError: RCTBubblingEventBlock = {_ in }
+  @Published var onStateMachineStart: RCTDirectEventBlock = {_ in }
+  @Published var onStateMachineStop: RCTDirectEventBlock = {_ in }
+  @Published var onStateMachineStateEntered: RCTDirectEventBlock = {_ in }
+  @Published var onStateMachineStateExit: RCTDirectEventBlock = {_ in }
+  @Published var onStateMachineTransition: RCTDirectEventBlock = {_ in }
+  @Published var onStateMachineBooleanInputChange: RCTDirectEventBlock = {_ in }
+  @Published var onStateMachineNumericInputChange: RCTDirectEventBlock = {_ in }
+  @Published var onStateMachineStringInputChange: RCTDirectEventBlock = {_ in }
+  @Published var onStateMachineInputFired: RCTDirectEventBlock = {_ in }
+  @Published var onStateMachineCustomEvent: RCTDirectEventBlock = {_ in }
+  @Published var onStateMachineError: RCTDirectEventBlock = {_ in }
 
   @Published var animation: DotLottieAnimation?
   var observer: DotLottieEventObserver?
   var stateMachineObserver: DotLottieStateMachineObserver?
    
-   func createAnimation() {
+  func createAnimation() {
      // Clean up existing animation
      cleanupAnimation()
 
@@ -53,19 +53,34 @@ import SwiftUI
        if sourceString.hasPrefix("file://") {
          if let url = URL(string: sourceString),
             let data = try? Data(contentsOf: url) {
-           self.animation = DotLottieAnimation(
+           let animation = DotLottieAnimation(
              dotLottieData: data,
              config: config
            )
+           self.animation = animation
+           subscribeToAnimation(animation)
          }
        } else {
-         self.animation = DotLottieAnimation(
+         let animation = DotLottieAnimation(
            webURL: sourceString,
            config: config
          )
+         self.animation = animation
+         subscribeToAnimation(animation)
        }
      }
    }
+  private func subscribeToAnimation(_ animation: DotLottieAnimation) {
+    // Subscribe to regular animation events
+    let eventObserver = DotLottieEventObserver(dataStore: self)
+    observer = eventObserver
+    animation.subscribe(observer: eventObserver)
+
+    // Subscribe to state machine events
+    let stateMachineObserver = DotLottieStateMachineObserver(dataStore: self)
+    self.stateMachineObserver = stateMachineObserver
+    _ = animation.stateMachineSubscribe(stateMachineObserver)
+  }
 
    func buildAnimationConfig() -> AnimationConfig {
      // Convert playMode to Mode enum
@@ -105,7 +120,7 @@ import SwiftUI
      )
    }
 
-   func cleanupAnimation() {
+  func cleanupAnimation() {
      // Unsubscribe regular observer if it exists
      if let observer = self.observer, let animation = self.animation {
        animation.unsubscribe(observer: observer)
@@ -116,10 +131,10 @@ import SwiftUI
        _ = animation.stateMachineUnSubscribe(observer: stateMachineObserver)
      }
 
-     self.observer = nil
-     self.stateMachineObserver = nil
-     self.animation = nil
-   }
+    self.observer = nil
+    self.stateMachineObserver = nil
+    self.animation = nil
+  }
 }
 
 
@@ -251,9 +266,6 @@ struct AnimationView: View {
     var body: some View {
       if let animation = dataStore.animation {
                   DotLottieView(dotLottie: animation)
-                      .onAppear {
-                          subscribeToAnimation()
-                      }
                       .onDisappear {
                           cleanupAnimation()
                       }
@@ -266,20 +278,6 @@ struct AnimationView: View {
     }
 
 
-
-  func subscribeToAnimation() {
-          guard let animation = dataStore.animation else { return }
-
-          // Subscribe to regular animation events
-          let eventObserver = DotLottieEventObserver(dataStore: dataStore)
-          dataStore.observer = eventObserver
-          animation.subscribe(observer: eventObserver)
-
-          // Subscribe to state machine events
-          let stateMachineObserver = DotLottieStateMachineObserver(dataStore: dataStore)
-          dataStore.stateMachineObserver = stateMachineObserver
-          let _ = animation.stateMachineSubscribe(stateMachineObserver)
-      }
 
   func cleanupAnimation() {
           dataStore.cleanupAnimation()
@@ -487,55 +485,167 @@ class DotlottieReactNativeViewManager: RCTViewManager {
 }
 
 class DotlottieReactNativeView: UIView {
-    var view: UIView?
-    var dataStore:Datastore  = .init()
-    var _animation: DotLottieAnimation? {
-         dataStore.animation
-     }
-
-
-    override init(frame: CGRect) {
-      super.init(frame: frame)
-      self.createAnimation()
-    }
-
-  func createAnimation() {
-    dataStore.createAnimation()
-    let vc = UIHostingController(rootView: AnimationView().environmentObject(dataStore))
-    vc.view.frame = bounds
-    self.addSubview(vc.view)
-    self.view = vc.view
-
+  private var hostingController: UIHostingController<AnyView>?
+  private var isMountedToWindow: Bool = false
+  private var isReleased: Bool = false
+  private var pendingAnimationUpdate: Bool = false
+  let dataStore: Datastore = .init()
+  var _animation: DotLottieAnimation? {
+    dataStore.animation
   }
 
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+    setupHostingControllerIfNeeded()
+  }
 
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
 
-    required init?(coder: NSCoder) {
-      fatalError("init(coder:) has not been implemented")
+  deinit {
+    releaseResources()
+  }
+
+  override func didMoveToWindow() {
+    super.didMoveToWindow()
+    guard !isReleased else {
+      return
     }
 
-    deinit {
+    let currentlyMounted = window != nil
+    if currentlyMounted == isMountedToWindow {
+      return
+    }
+
+    isMountedToWindow = currentlyMounted
+
+    if currentlyMounted {
+      setupHostingControllerIfNeeded()
+      scheduleAnimationUpdate()
+    } else {
       dataStore.cleanupAnimation()
+      tearDownHostingController()
     }
-  
-   
+  }
 
-    @objc var source: NSString = "" {
-        didSet{
-          dataStore.source = source
-          dataStore.createAnimation()
-        }
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    hostingController?.view.frame = bounds
+  }
+
+  func releaseResources() {
+    guard !isReleased else {
+      return
+    }
+
+    isReleased = true
+    isMountedToWindow = false
+    pendingAnimationUpdate = false
+    dataStore.cleanupAnimation()
+    tearDownHostingController()
+    resetEventHandlers()
+  }
+
+  private func setupHostingControllerIfNeeded() {
+    guard hostingController == nil, !isReleased else {
+      return
+    }
+
+    let rootView = AnyView(AnimationView().environmentObject(dataStore))
+    let controller = UIHostingController(rootView: rootView)
+    controller.view.backgroundColor = .clear
+    controller.view.frame = bounds
+    controller.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    addSubview(controller.view)
+    hostingController = controller
+    setNeedsLayout()
+  }
+
+  private func tearDownHostingController() {
+    guard let controller = hostingController else {
+      return
+    }
+
+    controller.view.removeFromSuperview()
+    hostingController = nil
+  }
+
+  private func performIfActive(_ action: () -> Void) {
+    if !isReleased {
+      action()
+    }
+  }
+
+  private func resetEventHandlers() {
+    dataStore.onPlay = { _ in }
+    dataStore.onLoad = { _ in }
+    dataStore.onLoadError = { _ in }
+    dataStore.onLoop = { _ in }
+    dataStore.onFrame = { _ in }
+    dataStore.onRender = { _ in }
+    dataStore.onComplete = { _ in }
+    dataStore.onPause = { _ in }
+    dataStore.onStop = { _ in }
+    dataStore.onStateMachineStart = { _ in }
+    dataStore.onStateMachineStop = { _ in }
+    dataStore.onStateMachineStateEntered = { _ in }
+    dataStore.onStateMachineStateExit = { _ in }
+    dataStore.onStateMachineTransition = { _ in }
+    dataStore.onStateMachineBooleanInputChange = { _ in }
+    dataStore.onStateMachineNumericInputChange = { _ in }
+    dataStore.onStateMachineStringInputChange = { _ in }
+    dataStore.onStateMachineInputFired = { _ in }
+    dataStore.onStateMachineCustomEvent = { _ in }
+    dataStore.onStateMachineError = { _ in }
+  }
+
+  private func scheduleAnimationUpdate() {
+    if isReleased {
+      return
+    }
+
+    if pendingAnimationUpdate {
+      return
+    }
+
+    pendingAnimationUpdate = true
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else {
+        return
       }
 
-    @objc var loop: Bool = false {
-        didSet{
-            dataStore.loop = loop
-            _animation?.setLoop(loop: loop)
-        }
+      if self.isReleased {
+        self.pendingAnimationUpdate = false
+        return
       }
 
-    @objc var autoplay: Bool = true {
-      didSet{
+      self.pendingAnimationUpdate = false
+      self.dataStore.createAnimation()
+    }
+  }
+
+  @objc var source: NSString = "" {
+    didSet {
+      performIfActive {
+        dataStore.source = source
+        scheduleAnimationUpdate()
+      }
+    }
+  }
+
+  @objc var loop: Bool = false {
+    didSet {
+      performIfActive {
+        dataStore.loop = loop
+        _animation?.setLoop(loop: loop)
+      }
+    }
+  }
+
+  @objc var autoplay: Bool = true {
+    didSet {
+      performIfActive {
         dataStore.autoplay = autoplay
         if autoplay {
           _ = _animation?.play()
@@ -544,216 +654,222 @@ class DotlottieReactNativeView: UIView {
         }
       }
     }
+  }
   
   @objc var speed: NSNumber = 1 {
-    didSet{
-      let speedValue = speed.doubleValue
-      dataStore.speed = speedValue
-
-      _animation?.setSpeed(speed: Float(speedValue))
+    didSet {
+      performIfActive {
+        let speedValue = speed.doubleValue
+        dataStore.speed = speedValue
+        _animation?.setSpeed(speed: Float(speedValue))
+      }
     }
   }
 
   @objc var themeId: NSString = "" {
-    didSet{
-      dataStore.themeId = themeId
-      if themeId != "" {
-        _animation?.setTheme(String(themeId))
+    didSet {
+      performIfActive {
+        dataStore.themeId = themeId
+        if themeId != "" {
+          _animation?.setTheme(String(themeId))
+        }
       }
     }
   }
 
   @objc var marker: NSString = "" {
-    didSet{
-      dataStore.marker = marker
-      if marker != "" {
-        _animation?.setMarker(marker: String(marker))
+    didSet {
+      performIfActive {
+        dataStore.marker = marker
+        if marker != "" {
+          _animation?.setMarker(marker: String(marker))
+        }
       }
     }
   }
 
   @objc var segment: NSArray? {
-    didSet{
-      dataStore.segment = segment
-      if let segmentArray = segment as? [NSNumber], segmentArray.count == 2 {
-        let start = Float(truncating: segmentArray[0])
-        let end = Float(truncating: segmentArray[1])
-        _animation?.setSegments(segments: (start, end))
-      } else if segment == nil, let animation = _animation {
-        // Reset to full animation range when segment is undefined
-        let totalFrames = animation.totalFrames()
-        _animation?.setSegments(segments: (0, totalFrames))
+    didSet {
+      performIfActive {
+        dataStore.segment = segment
+        if let segmentArray = segment as? [NSNumber], segmentArray.count == 2 {
+          let start = Float(truncating: segmentArray[0])
+          let end = Float(truncating: segmentArray[1])
+          _animation?.setSegments(segments: (start, end))
+        } else if segment == nil, let animation = _animation {
+          // Reset to full animation range when segment is undefined
+          let totalFrames = animation.totalFrames()
+          _animation?.setSegments(segments: (0, totalFrames))
+        }
       }
     }
   }
 
   @objc var playMode: NSNumber = 0 {
-    didSet{
-      dataStore.playMode = playMode.intValue
-      let mode: Mode = {
-        switch playMode.intValue {
-        case 0: return .forward
-        case 1: return .reverse
-        case 2: return .bounce
-        case 3: return .reverseBounce
-        default: return .forward
-        }
-      }()
-      _animation?.setMode(mode: mode)
-    }
-  }
-
-  @objc var useFrameInterpolation: Bool = false {
-    didSet{
-      dataStore.useFrameInterpolation = useFrameInterpolation
-      _animation?.setFrameInterpolation(useFrameInterpolation)
-    }
-  }
-
-  @objc var stateMachineId: NSString = "" {
-    didSet{
-      dataStore.stateMachineId = stateMachineId
-      if stateMachineId != "" {
-        // Load and start the state machine
-        let result = _animation?.stateMachineLoad(id: String(stateMachineId))
-        if result != nil {
-          _ = _animation?.stateMachineStart()
-        }
-      } else {
-        // Stop the state machine when stateMachineId is empty/undefined
-        _ = _animation?.stateMachineStop()
+    didSet {
+      performIfActive {
+        dataStore.playMode = playMode.intValue
+        let mode: Mode = {
+          switch playMode.intValue {
+          case 0: return .forward
+          case 1: return .reverse
+          case 2: return .bounce
+          case 3: return .reverseBounce
+          default: return .forward
+          }
+        }()
+        _animation?.setMode(mode: mode)
       }
     }
   }
 
-    @objc var onPlay: RCTBubblingEventBlock = {_ in} {
+  @objc var useFrameInterpolation: Bool = false {
+    didSet {
+      performIfActive {
+        dataStore.useFrameInterpolation = useFrameInterpolation
+        _animation?.setFrameInterpolation(useFrameInterpolation)
+      }
+    }
+  }
+
+  @objc var stateMachineId: NSString = "" {
+    didSet {
+      performIfActive {
+        dataStore.stateMachineId = stateMachineId
+        if stateMachineId != "" {
+          // Load and start the state machine
+          let result = _animation?.stateMachineLoad(id: String(stateMachineId))
+          if result != nil {
+            _ = _animation?.stateMachineStart()
+          }
+        } else {
+          // Stop the state machine when stateMachineId is empty/undefined
+          _ = _animation?.stateMachineStop()
+        }
+      }
+    }
+  }
+
+    @objc var onPlay: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onPlay = onPlay
         }
       }
     
-    @objc var onLoop: RCTBubblingEventBlock = {_ in} {
+    @objc var onLoop: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onLoop = onLoop
         }
       }
 
     
-    @objc var onLoadError: RCTBubblingEventBlock = {_ in} {
+    @objc var onLoadError: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onLoadError = onLoadError
         }
       }
     
-    @objc var onLoad: RCTBubblingEventBlock = {_ in} {
+    @objc var onLoad: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onLoad = onLoad
         }
       }
 
-    @objc var onFrame: RCTBubblingEventBlock = {_ in} {
+    @objc var onFrame: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onFrame = onFrame
         }
       }
 
-    @objc var onRender: RCTBubblingEventBlock = {_ in} {
+    @objc var onRender: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onRender = onRender
         }
       }
 
-    @objc var onComplete: RCTBubblingEventBlock = {_ in} {
+    @objc var onComplete: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onComplete = onComplete
         }
       }
 
-    @objc var onPause: RCTBubblingEventBlock = {_ in} {
+    @objc var onPause: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onPause = onPause
         }
       }
 
-    @objc var onStop: RCTBubblingEventBlock = {_ in} {
+    @objc var onStop: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStop = onStop
         }
       }
 
     // State machine events
-    @objc var onStateMachineStart: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineStart: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineStart = onStateMachineStart
         }
       }
 
-    @objc var onStateMachineStop: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineStop: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineStop = onStateMachineStop
         }
       }
 
-    @objc var onStateMachineStateEntered: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineStateEntered: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineStateEntered = onStateMachineStateEntered
         }
       }
 
-    @objc var onStateMachineStateExit: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineStateExit: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineStateExit = onStateMachineStateExit
         }
       }
 
-    @objc var onStateMachineTransition: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineTransition: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineTransition = onStateMachineTransition
         }
       }
 
-    @objc var onStateMachineBooleanInputChange: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineBooleanInputChange: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineBooleanInputChange = onStateMachineBooleanInputChange
         }
       }
 
-    @objc var onStateMachineNumericInputChange: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineNumericInputChange: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineNumericInputChange = onStateMachineNumericInputChange
         }
       }
 
-    @objc var onStateMachineStringInputChange: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineStringInputChange: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineStringInputChange = onStateMachineStringInputChange
         }
       }
 
-    @objc var onStateMachineInputFired: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineInputFired: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineInputFired = onStateMachineInputFired
         }
       }
 
-    @objc var onStateMachineCustomEvent: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineCustomEvent: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineCustomEvent = onStateMachineCustomEvent
         }
       }
 
-    @objc var onStateMachineError: RCTBubblingEventBlock = {_ in} {
+    @objc var onStateMachineError: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onStateMachineError = onStateMachineError
         }
       }
 
-
-     override func layoutSubviews() {
-       super.layoutSubviews()
-        self.view?.frame = bounds
-     }
-
 }
-
-

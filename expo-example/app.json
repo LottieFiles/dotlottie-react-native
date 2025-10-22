@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "expo-example",
+    "slug": "expo-example",
+    "version": "1.0.0",
+    "plugins": [
+      "../plugins/withDotLottie"
+    ],
+    "android": {
+      "package": "com.anonymous.expoexample"
+    },
+    "ios": {
+      "bundleIdentifier": "com.anonymous.expoexample"
+    }
+  }
+}
