@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { LifecycleExample } from './examples/LifecycleExample';
 import { StateMachineExample } from './examples/StateMachineExample';
+import { MultipleAnimationsTest } from './examples/MultipleAnimationsTest';
 
 type ExampleDescriptor = {
   key: string;
@@ -18,6 +19,13 @@ type ExampleDescriptor = {
 };
 
 const EXAMPLES: ExampleDescriptor[] = [
+  {
+    key: 'multiple-animations',
+    title: 'Multiple Animations Test',
+    description:
+      'Rendering multiple DotLottie components simultaneously.',
+    Component: MultipleAnimationsTest,
+  },
   {
     key: 'state-machine',
     title: 'State Machine Playground',

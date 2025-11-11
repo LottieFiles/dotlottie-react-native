@@ -610,19 +610,8 @@ class DotlottieReactNativeView: UIView {
     }
 
     pendingAnimationUpdate = true
-    DispatchQueue.main.async { [weak self] in
-      guard let self = self else {
-        return
-      }
-
-      if self.isReleased {
-        self.pendingAnimationUpdate = false
-        return
-      }
-
-      self.pendingAnimationUpdate = false
-      self.dataStore.createAnimation()
-    }
+    dataStore.createAnimation()
+    pendingAnimationUpdate = false
   }
 
   @objc var source: NSString = "" {
