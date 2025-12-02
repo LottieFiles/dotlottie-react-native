@@ -39,7 +39,7 @@ import SwiftUI
   @Published var animation: DotLottieAnimation?
   var observer: DotLottieEventObserver?
   var stateMachineObserver: DotLottieStateMachineObserver?
-   
+
   func createAnimation() {
      // Clean up existing animation
      cleanupAnimation()
@@ -128,7 +128,7 @@ import SwiftUI
 
      // Unsubscribe state machine observer if it exists
      if let stateMachineObserver = self.stateMachineObserver, let animation = self.animation {
-       _ = animation.stateMachineUnSubscribe(observer: stateMachineObserver)
+       _ = animation.stateMachineUnsubscribe(stateMachineObserver)
      }
 
     self.observer = nil
@@ -292,10 +292,10 @@ class DotlottieReactNativeViewManager: RCTViewManager {
     return DotlottieReactNativeView()
   }
 
-  
-  
-  
-  
+
+
+
+
   @objc
   func pause(_ node:NSNumber) {
     DispatchQueue.main.async {
@@ -315,7 +315,7 @@ class DotlottieReactNativeViewManager: RCTViewManager {
       }
     }
   }
-  
+
   @objc
   func play(_ node:NSNumber) {
       DispatchQueue.main.async {
@@ -327,7 +327,7 @@ class DotlottieReactNativeViewManager: RCTViewManager {
         let _ = animation.play()
       }
     }
-  
+
   @objc
   func setLoop(_ node:NSNumber, loop:Bool) {
     DispatchQueue.main.async {
@@ -335,7 +335,7 @@ class DotlottieReactNativeViewManager: RCTViewManager {
       _ = dotLottieView._animation?.setLoop(loop: loop)
     }
   }
-  
+
   @objc func setSpeed(_ node:NSNumber, speed:NSNumber) {
     DispatchQueue.main.async {
       let convertedSpeed = Float(truncating: speed)
@@ -343,7 +343,7 @@ class DotlottieReactNativeViewManager: RCTViewManager {
       _ = dotLottieView._animation?.setSpeed(speed: convertedSpeed)
     }
   }
-  
+
   @objc func setFrame(_ node:NSNumber, frame:NSNumber) {
     DispatchQueue.main.async {
       let convertedFrame = Float(truncating: frame)
@@ -434,17 +434,17 @@ class DotlottieReactNativeViewManager: RCTViewManager {
       try? dotLottieView._animation?.loadAnimationById(String(animationId))
     }
   }
-  
+
   @objc func setFrameInterpolation(_ node:NSNumber, useFrameInterpolation:Bool) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
       _ = dotLottieView._animation?.setFrameInterpolation(useFrameInterpolation)
     }
   }
-  
+
   @objc func setPlayMode(_ node:NSNumber, mode:NSNumber) {
     DispatchQueue.main.async {
-      
+
       let actualMode: Mode = {
         switch mode {
         case 0: return .forward
@@ -455,29 +455,29 @@ class DotlottieReactNativeViewManager: RCTViewManager {
           return .forward
         }
       }()
-      
+
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
       _ = dotLottieView._animation?.setMode(mode: actualMode)
     }
   }
-  
+
   @objc func setMarker(_ node:NSNumber, marker:NSString) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
       _ = dotLottieView._animation?.setMarker(marker: String(marker))
     }
   }
-  
+
   @objc func resize(_ node:NSNumber, width:NSNumber, height:NSNumber) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
       _ = dotLottieView._animation?.resize(width: Int(truncating: width), height: Int(truncating: height))
     }
   }
-  
-  
-  
- 
+
+
+
+
   @objc override static func requiresMainQueueSetup() -> Bool {
     return true
   }
@@ -644,7 +644,7 @@ class DotlottieReactNativeView: UIView {
       }
     }
   }
-  
+
   @objc var speed: NSNumber = 1 {
     didSet {
       performIfActive {
@@ -744,20 +744,20 @@ class DotlottieReactNativeView: UIView {
           dataStore.onPlay = onPlay
         }
       }
-    
+
     @objc var onLoop: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onLoop = onLoop
         }
       }
 
-    
+
     @objc var onLoadError: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onLoadError = onLoadError
         }
       }
-    
+
     @objc var onLoad: RCTDirectEventBlock = {_ in} {
         didSet{
           dataStore.onLoad = onLoad
