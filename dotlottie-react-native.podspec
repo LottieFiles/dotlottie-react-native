@@ -16,7 +16,8 @@ Pod::Spec.new do |s|
 
   s.source_files = "ios/**/*.{h,m,mm,swift}"
 
-  s.dependency 'LottieFiles-dotLottie-iOS', '~> 0.9'
+  # stateMachineUnsubscribe(...) API is available from 0.11.1+
+  s.dependency 'LottieFiles-dotLottie-iOS', '~> 0.11'
 
   s.swift_version = '5.0'
 
