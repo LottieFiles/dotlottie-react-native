@@ -144,6 +144,7 @@
     },
     "npm": {
       "publish": true,
+      "skipChecks": true,
       "publishArgs": [
         "--provenance --access public"
       ]

@@ -10,6 +10,10 @@ runs:
         node-version-file: .nvmrc
         registry-url: 'https://registry.npmjs.org'
 
+    - name: Upgrade npm for OIDC support
+      run: npm install -g npm@latest
+      shell: bash
+
     - name: Cache dependencies
       id: yarn-cache
       uses: actions/cache@v4
