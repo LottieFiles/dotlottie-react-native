@@ -135,7 +135,7 @@ interface DotlottieNativeProps {
 }
 
 interface DotlottieReactNativeProps {
-  source: string | { uri: string };
+  source: string | number | { uri: string };
   loop?: boolean;
   autoplay?: boolean;
   speed?: number;

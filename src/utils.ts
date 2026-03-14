@@ -1,6 +1,8 @@
 import { Image } from 'react-native';
 
-function parseSource(source: { uri: string } | string): string | undefined {
+function parseSource(
+  source: { uri: string } | string | number
+): string | undefined {
   const uri = (source as any).uri;
 
   if (typeof source === 'object' && uri) {
