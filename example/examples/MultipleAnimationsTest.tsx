@@ -35,6 +35,7 @@ export function MultipleAnimationsTest() {
               style={styles.animation}
               autoplay
               loop
+              // renderer='gl'
             />
           </View>
         ))}
