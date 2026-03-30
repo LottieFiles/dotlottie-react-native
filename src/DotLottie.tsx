@@ -30,6 +30,8 @@ export enum Mode {
   REVERSE_BOUNCE,
 }
 
+export type Renderer = 'sw' | 'gl';
+
 export type Dotlottie = {
   play: () => void;
   pause: () => void;
@@ -76,6 +78,7 @@ interface DotlottieNativeProps {
   playMode?: Mode;
   useFrameInterpolation?: boolean;
   stateMachineId?: string;
+  renderer?: Renderer;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;
@@ -145,6 +148,7 @@ interface DotlottieReactNativeProps {
   playMode?: Mode;
   useFrameInterpolation?: boolean;
   stateMachineId?: string;
+  renderer?: Renderer;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;

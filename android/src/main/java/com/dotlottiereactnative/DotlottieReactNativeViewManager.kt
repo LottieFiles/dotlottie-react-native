@@ -235,6 +235,11 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
     view.setStateMachineId(value)
   }
 
+  @ReactProp(name = "renderer")
+  fun setRenderer(view: DotlottieReactNativeView, value: String?) {
+    view.setUseOpenGLRenderer(value == "gl")
+  }
+
   override fun onDropViewInstance(view: DotlottieReactNativeView) {
     super.onDropViewInstance(view)
     view.release()

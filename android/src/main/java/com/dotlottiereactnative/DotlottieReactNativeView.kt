@@ -3,6 +3,7 @@ package com.dotlottiereactnative
 import android.graphics.Color
 import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import com.dotlottie.dlplayer.Mode
 import com.facebook.react.bridge.Arguments
@@ -12,6 +13,7 @@ import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.lottiefiles.dotlottie.core.compose.runtime.DotLottieController
 import com.lottiefiles.dotlottie.core.compose.ui.DotLottieAnimation
+import com.lottiefiles.dotlottie.core.compose.ui.DotLottieGLAnimation
 import com.lottiefiles.dotlottie.core.util.DotLottieEventListener
 import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import com.lottiefiles.dotlottie.core.util.StateMachineEventListener
@@ -19,7 +21,7 @@ import com.lottiefiles.dotlottie.core.util.StateMachineEventListener
 class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(context) {
 
   private var reactContext: ReactContext = context.reactApplicationContext
-  private var animationUrl: String? = null
+  private var animationUrl = mutableStateOf<String?>(null)
   private var loop: Boolean = false
   private var autoplay: Boolean = true
   private var speed: Float = 1f
@@ -29,7 +31,10 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var segment: Pair<Float, Float>? = null
   private var playMode: Mode = Mode.FORWARD
   private var stateMachineId: String? = null
+  private var useOpenGLRenderer: Boolean = false
+  private var rendererLocked: Boolean = false
   var dotLottieController: DotLottieController = DotLottieController()
+  private val eventListeners: List<DotLottieEventListener> = createEventListeners()
   private val stateMachineEventListener: StateMachineEventListener = createStateMachineEventListener()
   private var stateMachineListenerRegistered: Boolean = false
   private var hasActiveComposition: Boolean = false
@@ -51,81 +56,112 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(id, eventName, value)
   }
 
+  private fun createEventListeners(): List<DotLottieEventListener> {
+    return listOf(
+            object : DotLottieEventListener {
+              override fun onLoad() {
+                onReceiveNativeEvent("onLoad", null)
+              }
+              override fun onComplete() {
+                onReceiveNativeEvent("onComplete", null)
+              }
+              override fun onLoadError() {
+                onReceiveNativeEvent("onLoadError", null)
+              }
+              override fun onPlay() {
+                onReceiveNativeEvent("onPlay", null)
+              }
+              override fun onStop() {
+                onReceiveNativeEvent("onStop", null)
+              }
+              override fun onPause() {
+                onReceiveNativeEvent("onPause", null)
+              }
+              override fun onFreeze() {
+                onReceiveNativeEvent("onFreeze", null)
+              }
+              override fun onUnFreeze() {
+                onReceiveNativeEvent("onUnFreeze", null)
+              }
+              override fun onDestroy() {
+                onReceiveNativeEvent("onDestroy", null)
+              }
+              override fun onFrame(frame: Float) {
+                val value =
+                  Arguments.createMap().apply {
+                    putDouble("frameNo", frame.toDouble())
+                  }
+                onReceiveNativeEvent("onFrame", value)
+              }
+              override fun onLoop(loopCount: Int) {
+                val value =
+                  Arguments.createMap().apply {
+                    putInt("loopCount", loopCount)
+                  }
+                onReceiveNativeEvent("onLoop", value)
+              }
+              override fun onRender(frameNo: Float) {
+                val value =
+                  Arguments.createMap().apply {
+                    putDouble("frameNo", frameNo.toDouble())
+                  }
+                onReceiveNativeEvent("onRender", value)
+              }
+            }
+    )
+  }
+
   @Composable
   fun DotLottieContent() {
-    animationUrl?.let { url ->
-      DotLottieAnimation(
-              source = DotLottieSource.Url(url),
-              autoplay = autoplay,
-              loop = loop,
-              speed = speed,
-              controller = dotLottieController,
-              useFrameInterpolation = useFrameInterpolation,
-              themeId = themeId,
-              stateMachineId = stateMachineId,
-              marker = marker,
-              segment = segment,
-              playMode = playMode,
-              eventListeners =
-                      listOf(
-                              object : DotLottieEventListener {
-                                override fun onLoad() {
-                                  onReceiveNativeEvent("onLoad", null)
-                                }
-                                override fun onComplete() {
-                                  onReceiveNativeEvent("onComplete", null)
-                                }
-                                override fun onLoadError() {
-                                  onReceiveNativeEvent("onLoadError", null)
-                                }
-                                override fun onPlay() {
-                                  onReceiveNativeEvent("onPlay", null)
-                                }
-                                override fun onStop() {
-                                  onReceiveNativeEvent("onStop", null)
-                                }
-                                override fun onPause() {
-                                  onReceiveNativeEvent("onPause", null)
-                                }
-                                override fun onFreeze() {
-                                  onReceiveNativeEvent("onFreeze", null)
-                                }
-                                override fun onUnFreeze() {
-                                  onReceiveNativeEvent("onUnFreeze", null)
-                                }
-                                override fun onDestroy() {
-                                  onReceiveNativeEvent("onDestroy", null)
-                                }
-                                override fun onFrame(frame: Float) {
-                                  val value =
-                                    Arguments.createMap().apply {
-                                      putDouble("frameNo", frame.toDouble())
-                                    }
-                                  onReceiveNativeEvent("onFrame", value)
-                                }
-                                override fun onLoop(loopCount: Int) {
-                                  val value =
-                                    Arguments.createMap().apply {
-                                      putInt("loopCount", loopCount)
-                                    }
-                                  onReceiveNativeEvent("onLoop", value)
-                                }
-                                override fun onRender(frameNo: Float) {
-                                  val value =
-                                    Arguments.createMap().apply {
-                                      putDouble("frameNo", frameNo.toDouble())
-                                    }
-                                  onReceiveNativeEvent("onRender", value)
-                                }
-                              }
-                      )
-      )
+    animationUrl.value?.let { url ->
+      val source = DotLottieSource.Url(url)
+
+      if (useOpenGLRenderer) {
+        DotLottieGLAnimation(
+                source = source,
+                autoplay = autoplay,
+                loop = loop,
+                speed = speed,
+                controller = dotLottieController,
+                useFrameInterpolation = useFrameInterpolation,
+                themeId = themeId,
+                stateMachineId = stateMachineId,
+                marker = marker,
+                segment = segment,
+                playMode = playMode,
+                eventListeners = eventListeners
+        )
+      } else {
+        DotLottieAnimation(
+                source = source,
+                autoplay = autoplay,
+                loop = loop,
+                speed = speed,
+                controller = dotLottieController,
+                useFrameInterpolation = useFrameInterpolation,
+                themeId = themeId,
+                stateMachineId = stateMachineId,
+                marker = marker,
+                segment = segment,
+                playMode = playMode,
+                eventListeners = eventListeners
+        )
+      }
+    }
+  }
+
+  // Renderer is locked on first set because switching between GL and Canvas
+  // surfaces at runtime is not supported by the underlying SDK.
+  fun setUseOpenGLRenderer(value: Boolean) {
+    if (!rendererLocked) {
+      useOpenGLRenderer = value
+      rendererLocked = true
     }
   }
 
   fun setSource(url: String?) {
-    animationUrl = url
-    if (!isReleased) {
+    animationUrl.value = url
+    if (!isReleased && !hasActiveComposition) {
       renderContent()
     }
   }
