@@ -1,4 +1,12 @@
-# dotLottie React Native
+<p align="center">
+  <img
+    src="https://lottie.host/efe1eb25-5273-4f3f-b738-b83ddf25e721/YlQbabUaOf.svg"
+    alt="dotLottie React Native"
+    width="300"
+  />
+</p>
+
+<h1 align="center">dotLottie React Native</h1>
 
 Lottie & dotLottie component for React Native ([iOS](https://github.com/LottieFiles/dotlottie-ios/), [Android](https://github.com/LottieFiles/dotlottie-android/), and [Web](https://github.com/LottieFiles/dotlottie-web))
 
