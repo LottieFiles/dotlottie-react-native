@@ -10,10 +10,6 @@ const STATUS_LABEL: Record<LoadState, string> = {
   error: '❌ load error',
 };
 
-// Verifies that each source kind renders. The local require() case is the one
-// that regressed on Android release builds (see issue #50): in debug it is
-// served over http by Metro, but in release it resolves to a file://
-// /android_asset URI that the URL loader could not fetch.
 function SourceCase({
   title,
   source,
