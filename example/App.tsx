@@ -10,6 +10,7 @@ import {
 import { LifecycleExample } from './examples/LifecycleExample';
 import { StateMachineExample } from './examples/StateMachineExample';
 import { MultipleAnimationsTest } from './examples/MultipleAnimationsTest';
+import { SourceLoadingExample } from './examples/SourceLoadingExample';
 
 type ExampleDescriptor = {
   key: string;
@@ -19,6 +20,13 @@ type ExampleDescriptor = {
 };
 
 const EXAMPLES: ExampleDescriptor[] = [
+  {
+    key: 'source-loading',
+    title: 'Source Loading (issue #50)',
+    description:
+      'Verifies local require() and remote URL sources render, incl. Android release builds.',
+    Component: SourceLoadingExample,
+  },
   {
     key: 'multiple-animations',
     title: 'Multiple Animations Test',
