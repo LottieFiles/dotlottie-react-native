@@ -1,9 +1,11 @@
 package com.dotlottiereactnative
 
 import android.graphics.Color
+import android.net.Uri
 import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import com.dotlottie.dlplayer.Mode
 import com.facebook.react.bridge.Arguments
@@ -114,7 +116,7 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   @Composable
   fun DotLottieContent() {
     animationUrl.value?.let { url ->
-      val source = DotLottieSource.Url(url)
+      val source = remember(url) { resolveDotLottieSource(url) }
 
       if (useOpenGLRenderer) {
         DotLottieGLAnimation(
@@ -147,6 +149,41 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
                 eventListeners = eventListeners
         )
       }
+    }
+  }
+
+
+  private fun resolveDotLottieSource(url: String): DotLottieSource {
+    return when {
+      url.startsWith("http://") || url.startsWith("https://") ->
+              DotLottieSource.Url(url)
+
+      url.startsWith("file:///android_asset/") ->
+              DotLottieSource.Asset(url.removePrefix("file:///android_asset/"))
+
+      url.startsWith("file://") || url.startsWith("content://") ->
+              readSourceBytes(url)?.let { DotLottieSource.Data(it) } ?: DotLottieSource.Url(url)
+
+      else -> resolveResourceSource(url) ?: DotLottieSource.Url(url)
+    }
+  }
+
+  private fun resolveResourceSource(name: String): DotLottieSource? {
+    val resId =
+            reactContext.resources.getIdentifier(name, "raw", reactContext.packageName)
+                    .takeIf { it != 0 }
+                    ?: reactContext.resources
+                            .getIdentifier(name, "drawable", reactContext.packageName)
+                            .takeIf { it != 0 }
+    return resId?.let { DotLottieSource.Res(it) }
+  }
+
+  private fun readSourceBytes(uri: String): ByteArray? {
+    return try {
+      reactContext.contentResolver.openInputStream(Uri.parse(uri))?.use { it.readBytes() }
+    } catch (e: Exception) {
+      android.util.Log.e("DotLottie", "Failed to read source bytes from $uri: ${e.message}")
+      null
     }
   }
 
