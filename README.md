@@ -181,6 +181,10 @@ const styles = StyleSheet.create({
 });
 ```
 
+## Performance
+
+For Android applications, see the [Performance Optimization Guide](PERFORMANCE.md) for details on `performanceMode`, `cacheId`, and handling view lifecycles.
+
 ## API Reference
 
 ### Props
@@ -198,6 +202,8 @@ const styles = StyleSheet.create({
 | `marker`                | `string`                    | `undefined`   | Specifies a marker to use for playback.                                |
 | `themeId`               | `string`                    | `undefined`   | The theme ID to apply to the animation.                                |
 | `stateMachineId`        | `string`                    | `undefined`   | The ID of the state machine to load and start automatically.           |
+| `performanceMode`       | `'cpu' \| 'ram'`            | `'ram'`       | Android only: chooses between CPU caching or RAM cleanup on unmount.   |
+| `cacheId`               | `string`                    | `undefined`   | Android only: unique key to cache the player instance in `cpu` mode.   |
 
 ### Methods
 

@@ -41,6 +41,10 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var stateMachineListenerRegistered: Boolean = false
   private var hasActiveComposition: Boolean = false
   private var isReleased: Boolean = false
+  private var performanceMode: Int = 0
+
+
+  private var cacheId: String = ""
 
   private val composeView: ComposeView =
           ComposeView(context).apply {
@@ -61,6 +65,9 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private fun createEventListeners(): List<DotLottieEventListener> {
     return listOf(
             object : DotLottieEventListener {
+              override fun onSurfaceReady() {
+                onReceiveNativeEvent("onSurfaceReady", null)
+              }
               override fun onLoad() {
                 onReceiveNativeEvent("onLoad", null)
               }
@@ -131,7 +138,10 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
                 marker = marker,
                 segment = segment,
                 playMode = playMode,
-                eventListeners = eventListeners
+                eventListeners = eventListeners,
+                performanceMode = performanceMode,
+                cacheId = cacheId
+
         )
       } else {
         DotLottieAnimation(
@@ -286,6 +296,15 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     dotLottieController.resize(width, height)
   }
 
+  fun setPerformanceMode(value: Int?) {
+    performanceMode = value ?: 0
+  }
+
+
+  fun setCacheId(value: String?) {
+    cacheId = value ?: ""
+  }
+
   fun getTotalFrames(): Float {
     return dotLottieController.totalFrames
   }
@@ -427,6 +446,8 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
       renderContent()
     }
   }
+
+
 
   fun release() {
     if (isReleased) {

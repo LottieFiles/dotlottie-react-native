@@ -46,6 +46,7 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
   }
 
   private val bubblingEvents = arrayOf(
+          "onSurfaceReady",
           "onLoad",
           "onComplete",
           "onLoadError",
@@ -226,8 +227,8 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
   }
 
   @ReactProp(name = "playMode")
-  fun setPlayMode(view: DotlottieReactNativeView, value: Int) {
-    view.setPlayMode(value)
+  fun setPlayMode(view: DotlottieReactNativeView, value: Double) {
+    view.setPlayMode(value.toInt())
   }
 
   @ReactProp(name = "stateMachineId")
@@ -239,6 +240,18 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
   fun setRenderer(view: DotlottieReactNativeView, value: String?) {
     view.setUseOpenGLRenderer(value == "gl")
   }
+
+  @ReactProp(name = "performanceMode")
+  fun setPerformanceMode(view: DotlottieReactNativeView, value: Double) {
+    view.setPerformanceMode(value.toInt())
+  }
+
+
+  @ReactProp(name = "cacheId")
+  fun setCacheId(view: DotlottieReactNativeView, value: String?) {
+    view.setCacheId(value)
+  }
+
 
   override fun onDropViewInstance(view: DotlottieReactNativeView) {
     super.onDropViewInstance(view)

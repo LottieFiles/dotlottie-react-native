@@ -67,6 +67,7 @@ export type Dotlottie = {
   loopCount: () => Promise<number>;
 };
 
+
 interface DotlottieNativeProps {
   source: string | { uri: string };
   loop?: boolean;
@@ -79,8 +80,11 @@ interface DotlottieNativeProps {
   useFrameInterpolation?: boolean;
   stateMachineId?: string;
   renderer?: Renderer;
+  performanceMode?: 0 | 1 | 2;
+  cacheId?: string;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
+  onSurfaceReady?: () => void;
   onLoad?: () => void;
   onComplete?: () => void;
   onLoadError?: () => void;
@@ -149,8 +153,11 @@ interface DotlottieReactNativeProps {
   useFrameInterpolation?: boolean;
   stateMachineId?: string;
   renderer?: Renderer;
+  performanceMode?: 'cpu' | 'ram';
+  cacheId?: string;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
+  onSurfaceReady?: () => void;
   onLoad?: () => void;
   onComplete?: () => void;
   onLoadError?: () => void;
@@ -211,6 +218,7 @@ const COMMAND_SET_SEGMENT = 'setSegment';
 const COMMAND_SET_MARKER = 'setMarker';
 const COMMAND_SET_THEME = 'setTheme';
 const COMMAND_SET_LOAD_ANIMATION = 'loadAnimation';
+
 
 const ComponentName = 'DotlottieReactNativeView';
 
@@ -407,6 +415,8 @@ export const DotLottie = forwardRef(
       [dispatchCommand]
     );
 
+
+
     const resolveHandle = useCallback(() => {
       const handle = findNodeHandle(nativeRef.current);
       if (handle == null) {
@@ -526,11 +536,17 @@ export const DotLottie = forwardRef(
 
     const parsedSource = parseSource(source);
 
+    const mappedPerformanceMode = props.performanceMode === 'cpu' ? 1 : props.performanceMode === 'ram' ? 2 : 0;
+
     return (
       <DotlottieReactNativeView
         ref={nativeRef}
         source={parsedSource || ''}
         {...props}
+        performanceMode={mappedPerformanceMode}
+        onSurfaceReady={() => {
+          props.onSurfaceReady?.();
+        }}
         onLoop={(event) => {
           props.onLoop?.(event.nativeEvent.loopCount);
         }}
