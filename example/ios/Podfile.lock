@@ -1,13 +1,13 @@
 PODS:
   - boost (1.84.0)
-  - dotlottie-react-native (0.7.3):
+  - dotlottie-react-native (0.9.0):
     - boost
     - DoubleConversion
     - fast_float
     - fmt
     - glog
     - hermes-engine
-    - LottieFiles-dotLottie-iOS (~> 0.14)
+    - LottieFiles-dotLottie-iOS (~> 0.15.4)
     - RCT-Folly
     - RCT-Folly/Fabric
     - RCTRequired
@@ -37,7 +37,7 @@ PODS:
   - hermes-engine (0.81.4):
     - hermes-engine/Pre-built (= 0.81.4)
   - hermes-engine/Pre-built (0.81.4)
-  - LottieFiles-dotLottie-iOS (0.14.0)
+  - LottieFiles-dotLottie-iOS (0.15.4)
   - RCT-Folly (2024.11.18.00):
     - boost
     - DoubleConversion
@@ -2516,14 +2516,14 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
-  dotlottie-react-native: 6ee14e3abe4e4dda898926025bb0d5e9ae820f7b
+  dotlottie-react-native: d6410a267bede6656d313e9e5b7f2b40dd31e4eb
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
   FBLazyVector: 941bef1c8eeabd9fe1f501e30a5220beee913886
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: 35c763d57c9832d0eef764316ca1c4d043581394
-  LottieFiles-dotLottie-iOS: 1fdc73d31c2ad563eb2bd8ef6a00d52d381bd2d1
+  LottieFiles-dotLottie-iOS: 044d32af28bc38871c944c8daa9d9fde8f7e2d99
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: c0ed3249a97243002615517dff789bf4666cf585
   RCTRequired: 58719f5124f9267b5f9649c08bf23d9aea845b23
