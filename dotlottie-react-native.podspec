@@ -16,7 +16,11 @@ Pod::Spec.new do |s|
 
   s.source_files = "ios/**/*.{h,m,mm,swift}"
 
-  s.dependency 'LottieFiles-dotLottie-iOS', '~> 0.15.4'
+  spm_dependency(s,
+    url: 'https://github.com/LottieFiles/dotlottie-ios',
+    requirement: { kind: 'upToNextMajorVersion', minimumVersion: '0.15.5' },
+    products: ['DotLottie']
+  )
 
   s.swift_version = '5.0'
 
