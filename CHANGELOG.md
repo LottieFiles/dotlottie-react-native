@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.1 (2026-05-21)
+
+* fix: [android] pick source loader from URI scheme (#52) ([b3b5dcd](https://github.com/LottieFiles/dotlottie-react-native/commit/b3b5dcd)), closes [#52](https://github.com/LottieFiles/dotlottie-react-native/issues/52) [#50](https://github.com/LottieFiles/dotlottie-react-native/issues/50)
+* docs: update README with title and logo (#51) ([8e76dcb](https://github.com/LottieFiles/dotlottie-react-native/commit/8e76dcb)), closes [#51](https://github.com/LottieFiles/dotlottie-react-native/issues/51)
+
 ## 0.9.0 (2026-04-21)
 
 * chore(deps): 🔧 bump dotlottie-android to 0.13.6 (#46) ([86ee000](https://github.com/LottieFiles/dotlottie-react-native/commit/86ee000)), closes [#46](https://github.com/LottieFiles/dotlottie-react-native/issues/46) [#45](https://github.com/LottieFiles/dotlottie-react-native/issues/45)
