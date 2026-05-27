@@ -3063,7 +3063,7 @@ __metadata:
     "@commitlint/config-conventional": ^17.0.2
     "@evilmartians/lefthook": ^1.5.0
     "@expo/config-plugins": ^8.0.0
-    "@lottiefiles/dotlottie-react": ^0.18.7
+    "@lottiefiles/dotlottie-react": ^0.19.4
     "@react-native/eslint-config": ^0.73.1
     "@release-it/conventional-changelog": ^10.0.1
     "@types/jest": ^29.5.13
@@ -3087,21 +3087,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@lottiefiles/dotlottie-react@npm:^0.18.7":
-  version: 0.18.7
-  resolution: "@lottiefiles/dotlottie-react@npm:0.18.7"
+"@lottiefiles/dotlottie-react@npm:^0.19.4":
+  version: 0.19.4
+  resolution: "@lottiefiles/dotlottie-react@npm:0.19.4"
   dependencies:
-    "@lottiefiles/dotlottie-web": 0.67.0
+    "@lottiefiles/dotlottie-web": 0.74.0
   peerDependencies:
     react: ^17 || ^18 || ^19
-  checksum: ac611833fbb65fcbe66d42a4efdd731f4c665903b3554734d04f8ade0ae5c4c03d6be0978ecce5716c0b7d66ea00b20e3503046df6e8207dd78668eeab3eeffc
+  checksum: aebf50b16e1fed840d245bd28bcfd87d3bdece9533dae3a021a9c4d73eebe6be1828c2eb55e3ddb19ad70d202b72d8fd4edb89855ec8d293d9bc550afc29181f
   languageName: node
   linkType: hard
 
-"@lottiefiles/dotlottie-web@npm:0.67.0":
-  version: 0.67.0
-  resolution: "@lottiefiles/dotlottie-web@npm:0.67.0"
-  checksum: eb0d1b38921f012892efdb4e2770711d50c358966d8cec70a310d6e60f64d5da45fed8cb0997141b3b4a0b78f5617990b23a778d129637f3acf0f1458c3bb0c1
+"@lottiefiles/dotlottie-web@npm:0.74.0":
+  version: 0.74.0
+  resolution: "@lottiefiles/dotlottie-web@npm:0.74.0"
+  checksum: a9e71f5c980ab1f6c2212ab2b1f361fb30f9ce2ff29d7c51bf9202da6cf141867cd7c4e93fdc94f1ff964b50a73416247e29c5145add9d2f78b8099f29487c0d
   languageName: node
   linkType: hard
 
