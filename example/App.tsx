@@ -10,6 +10,7 @@ import {
 import { LifecycleExample } from './examples/LifecycleExample';
 import { StateMachineExample } from './examples/StateMachineExample';
 import { MultipleAnimationsTest } from './examples/MultipleAnimationsTest';
+import { NavigationCrashExample } from './examples/NavigationCrashExample';
 import { SourceLoadingExample } from './examples/SourceLoadingExample';
 
 type ExampleDescriptor = {
@@ -20,6 +21,13 @@ type ExampleDescriptor = {
 };
 
 const EXAMPLES: ExampleDescriptor[] = [
+  {
+    key: 'navigation-crash',
+    title: 'Navigation Crash (New Architecture)',
+    description:
+      'Reproduces iOS EXC_BAD_ACCESS crash and Android blank-view on navigating back to a DotLottie screen (newArchEnabled: true).',
+    Component: NavigationCrashExample,
+  },
   {
     key: 'source-loading',
     title: 'Source Loading (issue #50)',
