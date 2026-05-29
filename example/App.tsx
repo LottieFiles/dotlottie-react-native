@@ -23,7 +23,7 @@ type ExampleDescriptor = {
 const EXAMPLES: ExampleDescriptor[] = [
   {
     key: 'navigation-crash',
-    title: 'Navigation Crash (New Architecture)',
+    title: 'Navigation Crash (issue #53)',
     description:
       'Reproduces iOS EXC_BAD_ACCESS crash and Android blank-view on navigating back to a DotLottie screen (newArchEnabled: true).',
     Component: NavigationCrashExample,
