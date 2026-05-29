@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
 
   spm_dependency(s,
     url: 'https://github.com/LottieFiles/dotlottie-ios',
-    requirement: { kind: 'upToNextMajorVersion', minimumVersion: '0.15.5' },
+    requirement: { kind: 'upToNextMajorVersion', minimumVersion: '0.15.6' },
     products: ['DotLottie']
   )
 
