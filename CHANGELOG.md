@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.3
+### Patch Changes
+
+
+
+- [#61](https://github.com/LottieFiles/dotlottie-react-native/pull/61) [`99e3ea0`](https://github.com/LottieFiles/dotlottie-react-native/commit/99e3ea0ce034a36b61f30aed2a0e68651aaf006c) Thanks [@theashraf](https://github.com/theashraf)! - Fix crash when navigating away on iOS (bump dotlottie-ios to 0.15.6).
+
 ## 0.9.1 (2026-05-21)
 
 * fix: [android] pick source loader from URI scheme (#52) ([b3b5dcd](https://github.com/LottieFiles/dotlottie-react-native/commit/b3b5dcd)), closes [#52](https://github.com/LottieFiles/dotlottie-react-native/issues/52) [#50](https://github.com/LottieFiles/dotlottie-react-native/issues/50)
