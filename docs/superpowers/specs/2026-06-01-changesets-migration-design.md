@@ -68,9 +68,11 @@ The `main` ruleset here (`2135846`) has exactly four rules:
 - `deletion`, `non_fast_forward` — safety, keep.
 - `pull_request` — `allowed_merge_methods: [squash]`, `required_approving_review_count: 0`.
   The Version PR satisfies this (it *is* a PR; merging it is a PR merge). Keep.
-- `required_status_checks` — 5 contexts (`lint`, `test`, `build-android`,
-  `build-ios (fabric)`, `build-ios (paper)`), `strict` policy. **This is the only
-  hard blocker** for the bot PR. **Remove it.**
+- `required_status_checks` — 5 contexts as currently configured **in the ruleset**
+  (`lint`, `test`, `build-android`, `build-ios (fabric)`, `build-ios (paper)`),
+  `strict` policy. (This is the ruleset's configured context list, which is a subset
+  of all `ci.yml` jobs — not every CI job is a required check.) **This is the only
+  hard blocker** for the bot PR. **Remove the entire `required_status_checks` rule.**
 
 Removing only `required_status_checks` is the minimal relaxation that unblocks the
 bot while retaining force-push/deletion protection and the PR requirement. CI
@@ -191,12 +193,21 @@ Desync is structurally impossible — git is updated first, npm second.
           if: steps.changesets.outputs.published == 'true'
           env:
             GH_TOKEN: ${{ secrets.DOCS_CONTENT_SYNC_TOKEN }}
+            REPO_TOKEN: ${{ github.token }}
             PUBLISHED: ${{ steps.changesets.outputs.publishedPackages }}
           run: |
-            # for each published package, look up its GitHub release and
-            # repository_dispatch to LottieFiles/docs-content (event: dotlottie-docs-eval)
-            # — same payload shape as the current notify-docs.yml.
+            # for each entry in PUBLISHED (name + version), build the tag,
+            # look up its GitHub release via `gh release view <tag>` (using REPO_TOKEN),
+            # then repository_dispatch to LottieFiles/docs-content
+            # (event: dotlottie-docs-eval) with the release name/body/url.
+            # Mirrors dotlottie-web's inline "Notify docs-content" step.
   ```
+  **Important:** this step runs on a `push` trigger, so `github.event.release` is
+  **not** available (unlike the deleted `notify-docs.yml`, which ran on
+  `on: release`). Release fields must be sourced by looking the release up from its
+  tag (`gh release view "<name>@<version>"` / `vX.Y.Z`), iterating the
+  `publishedPackages` JSON — not from the event context. Single-package repo, so the
+  loop runs once.
 - **`CONTRIBUTING.md`** — replace the "Publishing to npm" / `yarn release` section
   with the changeset workflow (`yarn changeset` per PR; how releases happen).
 
