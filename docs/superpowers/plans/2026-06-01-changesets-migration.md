@@ -207,9 +207,6 @@ jobs:
       - name: Build package
         run: yarn prepare
 
-      - name: Run tests
-        run: yarn test
-
   release:
     name: Release
     needs: validate

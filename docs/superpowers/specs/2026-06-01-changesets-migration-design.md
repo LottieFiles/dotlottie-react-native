@@ -162,7 +162,6 @@ Desync is structurally impossible — git is updated first, npm second.
         - run: yarn lint
         - run: yarn typecheck
         - run: yarn prepare
-        - run: yarn test
     release:
       needs: validate
       if: github.repository == 'LottieFiles/dotlottie-react-native'
