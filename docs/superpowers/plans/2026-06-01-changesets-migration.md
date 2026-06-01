@@ -14,7 +14,8 @@
 
 ## Prerequisites (not code; verify/coordinate before the release goes live)
 
-- [ ] **PR #60 merged** (`chore: sync version to published 0.9.2`) so `main`'s `package.json` is `0.9.2`. Changesets computes the next version from `package.json`; without this a patch bump lands on `0.9.2` again and collides. **This migration branch should be rebased onto `main` after #60 merges** so it also carries `0.9.2`.
+- [x] **PR #60 merged** (`chore: sync version to published 0.9.2`) — `main`'s `package.json` is now `0.9.2` (merged 2026-06-01 07:16 UTC). Changesets computes the next version from `package.json`, so a patch changeset now resolves to `0.9.3`. **Rebase this migration branch onto the updated `main`** (`git rebase origin/main`) so it carries `0.9.2` before opening the migration PR.
+- [ ] **Resolve overlap with open PR #48** (`chore: 🤖 fixed auto notify docs trigger. added manual trigger`). That PR modifies `.github/workflows/notify-docs.yml` — the exact file Task 5 deletes. Decide before implementing: either (a) close/supersede #48 because this migration folds the docs dispatch inline and removes the standalone workflow, or (b) land #48 first and re-derive the inline dispatch from its updated version. Do not silently clobber #48's work.
 - [ ] **Maintainer drops the `required_status_checks` rule** from ruleset `2135846` on `main` before merging the Version PR (see Task 7). Until then the bot's Version PR cannot merge.
 - [ ] No npm token is needed — publishing already uses OIDC trusted publishing bound to this repo + `release.yml`. Keep the workflow filename `release.yml`.
 
