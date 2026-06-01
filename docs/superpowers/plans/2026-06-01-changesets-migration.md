@@ -253,6 +253,8 @@ jobs:
           SENDER: ${{ github.actor }}
           SOURCE_REPO: ${{ github.repository }}
         run: |
+          # Release lookups use the repo token (REPO_TOKEN); only the final
+          # docs-content dispatch uses the default GH_TOKEN (DOCS_CONTENT_SYNC_TOKEN).
           echo "$PUBLISHED" | jq -c '.[]' | while read -r PKG; do
             VERSION=$(jq -r '.version' <<<"$PKG")
             # Single-package repo → changesets tags as v<version>. Fall back to <name>@<version> just in case.
