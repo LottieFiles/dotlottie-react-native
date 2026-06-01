@@ -1,0 +1,11 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
+  "changelog": ["@changesets/changelog-github", { "repo": "LottieFiles/dotlottie-react-native" }],
+  "commit": false,
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["dotlottie-react-native-example", "dotlottie-react-native-expo-example"],
+  "prettier": false
+}
