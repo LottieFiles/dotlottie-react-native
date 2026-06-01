@@ -58,7 +58,8 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build example/dist lib",
     "prepare": "bob build",
-    "release": "release-it"
+    "release:version": "changeset version",
+    "release:publish": "yarn prepare && changeset publish"
   },
   "keywords": [
     "react-native",
@@ -89,11 +90,12 @@
     "access": "public"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0",
     "@commitlint/config-conventional": "^17.0.2",
     "@evilmartians/lefthook": "^1.5.0",
     "@expo/config-plugins": "^8.0.0",
     "@react-native/eslint-config": "^0.73.1",
-    "@release-it/conventional-changelog": "^10.0.1",
     "@types/jest": "^29.5.13",
     "@types/react": "^18.2.44",
     "commitlint": "^17.0.2",
@@ -106,7 +108,6 @@
     "react": "19.1.0",
     "react-native": "0.81.4",
     "react-native-builder-bob": "^0.29.0",
-    "release-it": "^19.0.5",
     "turbo": "^1.10.7",
     "typescript": "^5.2.2"
   },
@@ -119,6 +120,7 @@
     "react-native": "*"
   },
   "workspaces": [
+    ".",
     "example",
     "expo-example"
   ],
@@ -134,30 +136,6 @@
     "extends": [
       "@commitlint/config-conventional"
     ]
-  },
-  "release-it": {
-    "$schema": "https://unpkg.com/release-it@19/schema/release-it.json",
-    "git": {
-      "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}",
-      "requireCleanWorkingDir": false
-    },
-    "npm": {
-      "publish": true,
-      "skipChecks": true,
-      "publishArgs": [
-        "--provenance --access public"
-      ]
-    },
-    "github": {
-      "release": true
-    },
-    "plugins": {
-      "@release-it/conventional-changelog": {
-        "preset": "conventionalcommits",
-        "infile": "CHANGELOG.md"
-      }
-    }
   },
   "eslintConfig": {
     "root": true,

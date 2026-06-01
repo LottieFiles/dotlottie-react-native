@@ -1,14 +1,22 @@
 name: Release
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
 jobs:
-  release:
+  validate:
+    name: Validate
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      id-token: write
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,13 +35,72 @@ jobs:
       - name: Build package
         run: yarn prepare
 
-      - name: Setup Git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git status
+  release:
+    name: Release
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.repository == 'LottieFiles/dotlottie-react-native'
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: write
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Release
-        run: yarn release
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Create Release PR or Publish
+        id: changesets
+        uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b # v1.8.0
+        with:
+          version: yarn release:version
+          publish: yarn release:publish
+          commit: "chore: release"
+          title: "chore: release"
+          createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
+
+      - name: Notify docs-content
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_CONTENT_SYNC_TOKEN }}
+          REPO_TOKEN: ${{ github.token }}
+          PUBLISHED: ${{ steps.changesets.outputs.publishedPackages }}
+          SENDER: ${{ github.actor }}
+          SOURCE_REPO: ${{ github.repository }}
+        run: |
+          # Release lookups use the repo token (REPO_TOKEN); only the final
+          # docs-content dispatch uses the default GH_TOKEN (DOCS_CONTENT_SYNC_TOKEN).
+          PAYLOAD="${RUNNER_TEMP}/payload.json"
+          while read -r PKG; do
+            VERSION=$(jq -r '.version' <<<"$PKG")
+            NAME=$(jq -r '.name' <<<"$PKG")
+            # Single-package repo -> changesets tags as v<version>. Fall back to <name>@<version>.
+            TAG="v${VERSION}"
+            if ! GH_TOKEN="$REPO_TOKEN" gh release view "$TAG" --repo "$SOURCE_REPO" >/dev/null 2>&1 </dev/null; then
+              TAG="${NAME}@${VERSION}"
+            fi
+
+            REL=$(GH_TOKEN="$REPO_TOKEN" gh release view "$TAG" --repo "$SOURCE_REPO" --json name,body,url </dev/null)
+
+            jq -n \
+              --arg source_repo "$SOURCE_REPO" \
+              --arg source_package "" \
+              --arg release_tag "$TAG" \
+              --argjson rel "$REL" \
+              --arg sender "$SENDER" \
+              '{event_type:"dotlottie-docs-eval", client_payload:{source_repo:$source_repo, source_package:$source_package, release_tag:$release_tag, release_name:$rel.name, release_body:$rel.body, release_url:$rel.url, sender:$sender}}' \
+              > "$PAYLOAD"
+
+            gh api --method POST "/repos/LottieFiles/docs-content/dispatches" --input "$PAYLOAD" </dev/null
+          done < <(echo "$PUBLISHED" | jq -c '.[]')
