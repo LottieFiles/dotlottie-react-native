@@ -84,16 +84,17 @@ jobs:
         run: |
           # Release lookups use the repo token (REPO_TOKEN); only the final
           # docs-content dispatch uses the default GH_TOKEN (DOCS_CONTENT_SYNC_TOKEN).
-          echo "$PUBLISHED" | jq -c '.[]' | while read -r PKG; do
+          PAYLOAD="${RUNNER_TEMP}/payload.json"
+          while read -r PKG; do
             VERSION=$(jq -r '.version' <<<"$PKG")
             NAME=$(jq -r '.name' <<<"$PKG")
             # Single-package repo -> changesets tags as v<version>. Fall back to <name>@<version>.
             TAG="v${VERSION}"
-            if ! GH_TOKEN="$REPO_TOKEN" gh release view "$TAG" --repo "$SOURCE_REPO" >/dev/null 2>&1; then
+            if ! GH_TOKEN="$REPO_TOKEN" gh release view "$TAG" --repo "$SOURCE_REPO" >/dev/null 2>&1 </dev/null; then
               TAG="${NAME}@${VERSION}"
             fi
 
-            REL=$(GH_TOKEN="$REPO_TOKEN" gh release view "$TAG" --repo "$SOURCE_REPO" --json name,body,url)
+            REL=$(GH_TOKEN="$REPO_TOKEN" gh release view "$TAG" --repo "$SOURCE_REPO" --json name,body,url </dev/null)
 
             jq -n \
               --arg source_repo "$SOURCE_REPO" \
@@ -102,7 +103,7 @@ jobs:
               --argjson rel "$REL" \
               --arg sender "$SENDER" \
               '{event_type:"dotlottie-docs-eval", client_payload:{source_repo:$source_repo, source_package:$source_package, release_tag:$release_tag, release_name:$rel.name, release_body:$rel.body, release_url:$rel.url, sender:$sender}}' \
-              > payload.json
+              > "$PAYLOAD"
 
-            gh api --method POST "/repos/LottieFiles/docs-content/dispatches" --input payload.json
-          done
+            gh api --method POST "/repos/LottieFiles/docs-content/dispatches" --input "$PAYLOAD" </dev/null
+          done < <(echo "$PUBLISHED" | jq -c '.[]')
