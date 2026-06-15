@@ -62,6 +62,8 @@ const withDotLottie = (config) => {
         MIN_IOS_DEPLOYMENT_TARGET;
     }
 
+    podfileConfig.modResults['ios.useFrameworks'] = 'dynamic';
+
     return podfileConfig;
   });
 };
