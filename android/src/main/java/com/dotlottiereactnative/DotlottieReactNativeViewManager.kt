@@ -2,6 +2,7 @@ package com.dotlottiereactnative
 
 import com.dotlottie.dlplayer.Mode
 import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.common.annotations.internal.InteropLegacyArchitecture
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
@@ -39,7 +40,6 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
             COMMAND_SET_USE_FRAME_INTERPOLATION to COMMAND_SET_USE_FRAME_INTERPOLATION_ID,
             COMMAND_SET_SEGMENT to COMMAND_SET_SEGMENT_ID,
             COMMAND_SET_MARKER to COMMAND_SET_MARKER_ID,
-            COMMAND_SET_LAYOUT to COMMAND_SET_LAYOUT_ID,
             COMMAND_SET_THEME to COMMAND_SET_THEME_ID,
             COMMAND_LOAD_ANIMATION to COMMAND_LOAD_ANIMATION_ID,
     )
@@ -240,6 +240,11 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
     view.setUseOpenGLRenderer(value == "gl")
   }
 
+  @ReactProp(name = "layout")
+  fun setLayout(view: DotlottieReactNativeView, value: ReadableMap?) {
+    view.setLayout(value)
+  }
+
   override fun onDropViewInstance(view: DotlottieReactNativeView) {
     super.onDropViewInstance(view)
     view.release()
@@ -313,9 +318,6 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
 
     private const val COMMAND_SET_MARKER = "setMarker"
     private const val COMMAND_SET_MARKER_ID = 22
-
-    private const val COMMAND_SET_LAYOUT = "setLayout"
-    private const val COMMAND_SET_LAYOUT_ID = 23
 
     private const val COMMAND_SET_THEME = "setTheme"
     private const val COMMAND_SET_THEME_ID = 24

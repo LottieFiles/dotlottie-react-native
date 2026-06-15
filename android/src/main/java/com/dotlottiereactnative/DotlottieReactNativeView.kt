@@ -7,9 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
+import com.dotlottie.dlplayer.Fit
 import com.dotlottie.dlplayer.Mode
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
@@ -33,6 +35,8 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var segment: Pair<Float, Float>? = null
   private var playMode: Mode = Mode.FORWARD
   private var stateMachineId: String? = null
+  private var layoutFit: Fit = Fit.CONTAIN
+  private var layoutAlign: Pair<Float, Float> = Pair(0.5f, 0.5f)
   private var useOpenGLRenderer: Boolean = false
   private var rendererLocked: Boolean = false
   var dotLottieController: DotLottieController = DotLottieController()
@@ -284,6 +288,25 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
 
   fun resize(width: UInt, height: UInt) {
     dotLottieController.resize(width, height)
+  }
+
+  fun setLayout(map: ReadableMap?) {
+    layoutFit = when (if (map?.hasKey("fit") == true) map.getString("fit") else null) {
+      "cover" -> Fit.COVER
+      "fill" -> Fit.FILL
+      "fit-width" -> Fit.FIT_WIDTH
+      "fit-height" -> Fit.FIT_HEIGHT
+      "none" -> Fit.NONE
+      else -> Fit.CONTAIN
+    }
+    layoutAlign = if (map?.hasKey("align") == true) {
+      map.getArray("align")?.takeIf { it.size() == 2 }
+        ?.let { Pair(it.getDouble(0).toFloat(), it.getDouble(1).toFloat()) }
+        ?: Pair(0.5f, 0.5f)
+    } else {
+      Pair(0.5f, 0.5f)
+    }
+    dotLottieController.setLayout(layoutFit, layoutAlign)
   }
 
   fun getTotalFrames(): Float {
