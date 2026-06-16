@@ -105,6 +105,18 @@ import SwiftUI
     return DotLottie.Layout(fit: fit, alignX: alignX, alignY: alignY)
   }
 
+  /// Applies the current `layoutConfig` to a live animation without reloading
+  /// it. Returns `false` when there is no animation yet, so the caller can fall
+  /// back to (re)creating one with the layout baked into its config.
+  @discardableResult
+  func applyLayout() -> Bool {
+    guard let animation = animation else { return false }
+    let layout = buildLayout() ?? DotLottie.Layout(fit: .contain, alignX: 0.5, alignY: 0.5)
+    
+    animation.setLayout(layout: layout)
+    return true
+  }
+
    func buildAnimationConfig() -> AnimationConfig {
      // Convert playMode to Mode enum
      let mode: Mode = {
@@ -748,10 +760,13 @@ class DotlottieReactNativeView: UIView {
     didSet {
       performIfActive {
         dataStore.layoutConfig = layout
-        // Recreate so the new layout applies whether or not the animation exists
-        // yet. (The SDK also exposes a runtime setLayout if a no-reload path is
-        // preferred later.)
-        scheduleAnimationUpdate()
+        // Prefer the SDK's runtime setLayout (no reload) so the fit/align change
+        // applies to the existing, already-sized render surface. Fall back to
+        // (re)creating the animation when one doesn't exist yet, so the layout
+        // is baked into its initial config.
+        if !dataStore.applyLayout() {
+          scheduleAnimationUpdate()
+        }
       }
     }
   }
