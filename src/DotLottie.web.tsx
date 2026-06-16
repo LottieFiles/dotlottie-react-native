@@ -13,6 +13,7 @@ import {
 } from '@lottiefiles/dotlottie-react';
 import { parseSource } from './utils';
 import type { Mode } from './DotLottie';
+import { toWebLayout, type Layout } from './layout';
 
 export type Dotlottie = {
   play: () => void;
@@ -57,6 +58,7 @@ interface DotlottieReactNativeProps {
   useFrameInterpolation?: boolean;
   stateMachineId?: string;
   renderer?: 'sw' | 'gl';
+  layout?: Layout;
   style?: any;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;
@@ -86,6 +88,7 @@ export const DotLottie = forwardRef(
       playMode,
       useFrameInterpolation,
       stateMachineId,
+      layout,
       style,
       onLoad,
       onComplete,
@@ -313,6 +316,7 @@ export const DotLottie = forwardRef(
         mode={mode}
         useFrameInterpolation={useFrameInterpolation}
         stateMachineId={stateMachineId}
+        layout={toWebLayout(layout)}
         style={canvasStyle}
         dotLottieRefCallback={dotLottieRefCallback}
       />

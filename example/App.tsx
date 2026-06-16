@@ -11,6 +11,7 @@ import { LifecycleExample } from './examples/LifecycleExample';
 import { StateMachineExample } from './examples/StateMachineExample';
 import { MultipleAnimationsTest } from './examples/MultipleAnimationsTest';
 import { SourceLoadingExample } from './examples/SourceLoadingExample';
+import { LayoutFitExample } from './examples/LayoutFitExample';
 
 type ExampleDescriptor = {
   key: string;
@@ -22,16 +23,22 @@ type ExampleDescriptor = {
 const EXAMPLES: ExampleDescriptor[] = [
   {
     key: 'source-loading',
-    title: 'Source Loading (issue #50)',
+    title: 'Source Loading',
     description:
       'Verifies local require() and remote URL sources render, incl. Android release builds.',
     Component: SourceLoadingExample,
   },
   {
+    key: 'layout-fit',
+    title: 'Layout / fit',
+    description:
+      'Switch fit modes (contain, cover, fill, …) in a wide container to see filling vs cropping.',
+    Component: LayoutFitExample,
+  },
+  {
     key: 'multiple-animations',
     title: 'Multiple Animations Test',
-    description:
-      'Rendering multiple DotLottie components simultaneously.',
+    description: 'Rendering multiple DotLottie components simultaneously.',
     Component: MultipleAnimationsTest,
   },
   {
@@ -54,8 +61,8 @@ export default function App() {
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
   const activeExample = useMemo(
-    () => EXAMPLES.find((example) => example.key === activeKey) ?? null,
-    [activeKey]
+    () => EXAMPLES.find(example => example.key === activeKey) ?? null,
+    [activeKey],
   );
 
   return (
@@ -83,16 +90,15 @@ export default function App() {
             Pick an example to explore different integration paths and check
             native lifecycle behavior.
           </Text>
-          {EXAMPLES.map((example) => (
+          {EXAMPLES.map(example => (
             <View key={example.key} style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={styles.cardTitle}>{example.title}</Text>
-                <Text style={styles.cardDescription}>{example.description}</Text>
+                <Text style={styles.cardDescription}>
+                  {example.description}
+                </Text>
               </View>
-              <Button
-                title="Open"
-                onPress={() => setActiveKey(example.key)}
-              />
+              <Button title="Open" onPress={() => setActiveKey(example.key)} />
             </View>
           ))}
         </ScrollView>

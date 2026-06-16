@@ -13,6 +13,7 @@ import SwiftUI
   @Published var marker: NSString = ""
   @Published var themeId: NSString = ""
   @Published var stateMachineId: NSString = ""
+  @Published var layoutConfig: NSDictionary? = nil
   @Published var onPlay: RCTDirectEventBlock = {_ in }
   @Published var onLoad: RCTDirectEventBlock = {_ in }
   @Published var onLoadError: RCTDirectEventBlock = {_ in }
@@ -82,6 +83,40 @@ import SwiftUI
     _ = animation.stateMachineSubscribe(stateMachineObserver)
   }
 
+  private func buildLayout() -> DotLottie.Layout? {
+    guard let dict = layoutConfig else { return nil }
+    let fitString = (dict["fit"] as? String) ?? "contain"
+    let fit: Fit = {
+      switch fitString {
+      case "cover": return .cover
+      case "fill": return .fill
+      case "fit-width": return .fitWidth
+      case "fit-height": return .fitHeight
+      case "none": return .none
+      default: return .contain
+      }
+    }()
+    var alignX: Float = 0.5
+    var alignY: Float = 0.5
+    if let alignArr = dict["align"] as? [NSNumber], alignArr.count == 2 {
+      alignX = Float(truncating: alignArr[0])
+      alignY = Float(truncating: alignArr[1])
+    }
+    return DotLottie.Layout(fit: fit, alignX: alignX, alignY: alignY)
+  }
+
+  /// Applies the current `layoutConfig` to a live animation without reloading
+  /// it. Returns `false` when there is no animation yet, so the caller can fall
+  /// back to (re)creating one with the layout baked into its config.
+  @discardableResult
+  func applyLayout() -> Bool {
+    guard let animation = animation else { return false }
+    let layout = buildLayout() ?? DotLottie.Layout(fit: .contain, alignX: 0.5, alignY: 0.5)
+    
+    animation.setLayout(layout: layout)
+    return true
+  }
+
    func buildAnimationConfig() -> AnimationConfig {
      // Convert playMode to Mode enum
      let mode: Mode = {
@@ -113,7 +148,7 @@ import SwiftUI
        backgroundColor: nil,
        width: nil,  // Use default
        height: nil,  // Use default
-       layout: nil,  // Use default
+       layout: buildLayout(),
        marker: marker != "" ? String(marker) : "",
        themeId: themeId != "" ? String(themeId) : "",
        stateMachineId: stateMachineId != "" ? String(stateMachineId) : ""
@@ -717,6 +752,21 @@ class DotlottieReactNativeView: UIView {
       performIfActive {
         dataStore.useFrameInterpolation = useFrameInterpolation
         _animation?.setFrameInterpolation(useFrameInterpolation)
+      }
+    }
+  }
+
+  @objc var layout: NSDictionary? {
+    didSet {
+      performIfActive {
+        dataStore.layoutConfig = layout
+        // Prefer the SDK's runtime setLayout (no reload) so the fit/align change
+        // applies to the existing, already-sized render surface. Fall back to
+        // (re)creating the animation when one doesn't exist yet, so the layout
+        // is baked into its initial config.
+        if !dataStore.applyLayout() {
+          scheduleAnimationUpdate()
+        }
       }
     }
   }

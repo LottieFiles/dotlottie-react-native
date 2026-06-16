@@ -198,6 +198,17 @@ const styles = StyleSheet.create({
 | `marker`                | `string`                    | `undefined`   | Specifies a marker to use for playback.                                |
 | `themeId`               | `string`                    | `undefined`   | The theme ID to apply to the animation.                                |
 | `stateMachineId`        | `string`                    | `undefined`   | The ID of the state machine to load and start automatically.           |
+| `layout`                | `{ fit?: Fit; align?: [number, number] }` | `undefined`   | Controls how the animation fits its container. `fit`: `contain` (default), `cover`, `fill`, `fit-width`, `fit-height`, `none`. `align`: crop anchor, each `0..1`, default `[0.5, 0.5]`. |
+
+**Example — fill the container and crop the overflow:**
+
+```tsx
+<DotLottie
+  source={require('./animation.lottie')}
+  style={{ flex: 1 }}
+  layout={{ fit: 'cover' }}
+/>
+```
 
 ### Methods
 
