@@ -7,9 +7,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
+import com.dotlottie.dlplayer.Fit
 import com.dotlottie.dlplayer.Mode
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
@@ -33,6 +35,8 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var segment: Pair<Float, Float>? = null
   private var playMode: Mode = Mode.FORWARD
   private var stateMachineId: String? = null
+  private var layoutFit: Fit = Fit.CONTAIN
+  private var layoutAlign: Pair<Float, Float> = Pair(0.5f, 0.5f)
   private var useOpenGLRenderer: Boolean = false
   private var rendererLocked: Boolean = false
   var dotLottieController: DotLottieController = DotLottieController()
@@ -41,6 +45,19 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var stateMachineListenerRegistered: Boolean = false
   private var hasActiveComposition: Boolean = false
   private var isReleased: Boolean = false
+  private var hasAttachedToWindow: Boolean = false
+
+  private val measureAndLayout =
+          Runnable {
+            if (!hasAttachedToWindow || width <= 0 || height <= 0) {
+              return@Runnable
+            }
+            measure(
+                    MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+            )
+            layout(left, top, right, bottom)
+          }
 
   private val composeView: ComposeView =
           ComposeView(context).apply {
@@ -50,7 +67,8 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   init {
     addView(composeView)
     ensureStateMachineListener()
-    renderContent()
+    // Composition is created once the view is attached (onAttachedToWindow /
+    // setSource); creating it here while detached is unnecessary.
   }
 
   fun onReceiveNativeEvent(eventName: String, value: WritableMap?) {
@@ -286,6 +304,25 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     dotLottieController.resize(width, height)
   }
 
+  fun setLayout(map: ReadableMap?) {
+    layoutFit = when (if (map?.hasKey("fit") == true) map.getString("fit") else null) {
+      "cover" -> Fit.COVER
+      "fill" -> Fit.FILL
+      "fit-width" -> Fit.FIT_WIDTH
+      "fit-height" -> Fit.FIT_HEIGHT
+      "none" -> Fit.NONE
+      else -> Fit.CONTAIN
+    }
+    layoutAlign = if (map?.hasKey("align") == true) {
+      map.getArray("align")?.takeIf { it.size() == 2 }
+        ?.let { Pair(it.getDouble(0).toFloat(), it.getDouble(1).toFloat()) }
+        ?: Pair(0.5f, 0.5f)
+    } else {
+      Pair(0.5f, 0.5f)
+    }
+    dotLottieController.setLayout(layoutFit, layoutAlign)
+  }
+
   fun getTotalFrames(): Float {
     return dotLottieController.totalFrames
   }
@@ -414,11 +451,14 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
 
   override fun onDetachedFromWindow() {
     super.onDetachedFromWindow()
+    hasAttachedToWindow = false
+    removeCallbacks(measureAndLayout)
     cleanup()
   }
 
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
+    hasAttachedToWindow = true
     if (isReleased) {
       return
     }
@@ -426,6 +466,48 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     if (!hasActiveComposition) {
       renderContent()
     }
+    scheduleMeasureAndLayout()
+  }
+
+  override fun requestLayout() {
+    super.requestLayout()
+    scheduleMeasureAndLayout()
+  }
+
+  override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    if (!hasAttachedToWindow) {
+      setMeasuredDimension(
+              MeasureSpec.getSize(widthMeasureSpec),
+              MeasureSpec.getSize(heightMeasureSpec)
+      )
+      return
+    }
+
+    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+  }
+
+  override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+    super.onLayout(changed, left, top, right, bottom)
+    layoutComposeViewIfReady()
+  }
+
+  private fun layoutComposeViewIfReady() {
+    if (!hasAttachedToWindow || width <= 0 || height <= 0) {
+      return
+    }
+    composeView.measure(
+            MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+    )
+    composeView.layout(0, 0, width, height)
+  }
+
+  private fun scheduleMeasureAndLayout() {
+    if (!hasAttachedToWindow) {
+      return
+    }
+    removeCallbacks(measureAndLayout)
+    post(measureAndLayout)
   }
 
   fun release() {

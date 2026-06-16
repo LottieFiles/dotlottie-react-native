@@ -1,6 +1,6 @@
 PODS:
   - boost (1.84.0)
-  - dotlottie-react-native (0.9.1):
+  - dotlottie-react-native (0.9.3):
     - boost
     - DoubleConversion
     - fast_float
@@ -2513,7 +2513,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
-  dotlottie-react-native: d1737769a6a7abf1e5b414987223b9db7201932d
+  dotlottie-react-native: 8e628ab741e15d7f925557255a2639a2a4a91e54
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   fast_float: b32c788ed9c6a8c584d114d0047beda9664e7cc6
   FBLazyVector: 941bef1c8eeabd9fe1f501e30a5220beee913886

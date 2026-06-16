@@ -16,6 +16,9 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 import { parseSource } from './utils';
+import type { Layout } from './layout';
+
+export type { Fit, Align, Layout } from './layout';
 
 const LINKING_ERROR =
   `The package '@lottiefiles/dotlottie-react-native' doesn't seem to be linked. Make sure: \n\n` +
@@ -79,6 +82,7 @@ interface DotlottieNativeProps {
   useFrameInterpolation?: boolean;
   stateMachineId?: string;
   renderer?: Renderer;
+  layout?: Layout;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;
@@ -149,6 +153,7 @@ interface DotlottieReactNativeProps {
   useFrameInterpolation?: boolean;
   stateMachineId?: string;
   renderer?: Renderer;
+  layout?: Layout;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;

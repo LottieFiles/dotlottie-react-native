@@ -127,6 +127,7 @@
   "packageManager": "yarn@3.6.1",
   "jest": {
     "preset": "react-native",
+    "passWithNoTests": true,
     "modulePathIgnorePatterns": [
       "<rootDir>/example/node_modules",
       "<rootDir>/lib/"
