@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.10.0
+### Minor Changes
+
+
+
+- [#65](https://github.com/LottieFiles/dotlottie-react-native/pull/65) [`f8545a0`](https://github.com/LottieFiles/dotlottie-react-native/commit/f8545a001459e0e65b27d564c38987aa8a2f37dc) Thanks [@theashraf](https://github.com/theashraf)! - feat: added layout (fit/align) prop
+
+
+### Patch Changes
+
+
+
+- [#63](https://github.com/LottieFiles/dotlottie-react-native/pull/63) [`6e162e2`](https://github.com/LottieFiles/dotlottie-react-native/commit/6e162e269cb066a954292039cf5808cb9f0c52bd) Thanks [@quoc-upstart](https://github.com/quoc-upstart)! - Fix an Android crash ("Cannot locate windowRecomposer") when a `<DotLottie>` is
+  measured before its window is attached under the React Native new architecture
+  (Fabric) — e.g. navigating to a screen that renders it via react-native-screens.
+
+
+- [#69](https://github.com/LottieFiles/dotlottie-react-native/pull/69) [`e625dd9`](https://github.com/LottieFiles/dotlottie-react-native/commit/e625dd9e22b3cc99c0fb7d48ecba533b9e6688ed) Thanks [@theashraf](https://github.com/theashraf)! - fix(ios): revert the `dotlottie-ios` dependency from Swift Package Manager back to
+  the `LottieFiles-dotLottie-iOS` CocoaPods pod.
+  
+  Pulling the player as a SwiftPM product via `spm_dependency` caused
+  `DotLottiePlayer.xcframework` to be processed twice during an archive (once by the
+  SwiftPM `DotLottie` target and once by the `dotlottie-react-native` pod target).
+  On Xcode 26 the archive step collects each embedded xcframework's signature into a
+  single flat `Signatures/` folder, so the two identically-named
+  `DotLottiePlayer.xcframework-ios.signature` files collide and archiving fails with
+  `File exists` (exit 70). Consuming the player through the CocoaPods pod embeds the
+  xcframework exactly once, resolving the archive failure ([#66](https://github.com/LottieFiles/dotlottie-react-native/issues/66)).
+
 ## 0.9.3
 ### Patch Changes
 
