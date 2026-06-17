@@ -62,11 +62,10 @@ const withDotLottie = (config) => {
         MIN_IOS_DEPLOYMENT_TARGET;
     }
 
-    // The iOS player is a Swift Package (DotLottie). Linking it under static
-    // libraries archives its objects more than once into the consumer target,
-    // producing thousands of duplicate-symbol errors. Dynamic frameworks give
-    // each module a single shared image, so force dynamic linkage unless the
-    // app has explicitly chosen a value already.
+    // The iOS player ships as the LottieFiles-dotLottie-iOS CocoaPods pod, which
+    // vendors DotLottiePlayer.xcframework as a dynamic framework. Default to
+    // dynamic linkage so it is embedded as a single shared image, unless the app
+    // has already chosen a value.
     if (!podfileConfig.modResults['ios.useFrameworks']) {
       podfileConfig.modResults['ios.useFrameworks'] = 'dynamic';
     }
