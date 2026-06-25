@@ -1,324 +1,5 @@
 import DotLottie
-import SwiftUI
-
-
- class Datastore: ObservableObject {
-   @Published var source: NSString = ""
-  @Published var loop: Bool = false
-  @Published var autoplay: Bool = true
-  @Published var speed: Double = 1
-  @Published var useFrameInterpolation: Bool = false
-  @Published var playMode: Int = 0
-  @Published var segment: NSArray? = nil
-  @Published var marker: NSString = ""
-  @Published var themeId: NSString = ""
-  @Published var stateMachineId: NSString = ""
-  @Published var layoutConfig: NSDictionary? = nil
-  @Published var onPlay: RCTDirectEventBlock = {_ in }
-  @Published var onLoad: RCTDirectEventBlock = {_ in }
-  @Published var onLoadError: RCTDirectEventBlock = {_ in }
-  @Published var onLoop: RCTDirectEventBlock = {_ in }
-  @Published var onFrame: RCTDirectEventBlock = {_ in }
-  @Published var onRender: RCTDirectEventBlock = {_ in }
-  @Published var onComplete: RCTDirectEventBlock = {_ in }
-  @Published var onPause: RCTDirectEventBlock = {_ in }
-  @Published var onStop: RCTDirectEventBlock = {_ in }
-
-  // State machine events
-  @Published var onStateMachineStart: RCTDirectEventBlock = {_ in }
-  @Published var onStateMachineStop: RCTDirectEventBlock = {_ in }
-  @Published var onStateMachineStateEntered: RCTDirectEventBlock = {_ in }
-  @Published var onStateMachineStateExit: RCTDirectEventBlock = {_ in }
-  @Published var onStateMachineTransition: RCTDirectEventBlock = {_ in }
-  @Published var onStateMachineBooleanInputChange: RCTDirectEventBlock = {_ in }
-  @Published var onStateMachineNumericInputChange: RCTDirectEventBlock = {_ in }
-  @Published var onStateMachineStringInputChange: RCTDirectEventBlock = {_ in }
-  @Published var onStateMachineInputFired: RCTDirectEventBlock = {_ in }
-  @Published var onStateMachineCustomEvent: RCTDirectEventBlock = {_ in }
-  @Published var onStateMachineError: RCTDirectEventBlock = {_ in }
-
-  @Published var animation: DotLottieAnimation?
-  var observer: DotLottieEventObserver?
-  var stateMachineObserver: DotLottieStateMachineObserver?
-
-  func createAnimation() {
-     // Clean up existing animation
-     cleanupAnimation()
-
-     if(self.source != ""){
-       let sourceString = source as String
-
-       // Build complete AnimationConfig with all available props
-       let config = buildAnimationConfig()
-
-       if sourceString.hasPrefix("file://") {
-         if let url = URL(string: sourceString),
-            let data = try? Data(contentsOf: url) {
-           let animation = DotLottieAnimation(
-             dotLottieData: data,
-             config: config
-           )
-           self.animation = animation
-           subscribeToAnimation(animation)
-         }
-       } else {
-         let animation = DotLottieAnimation(
-           webURL: sourceString,
-           config: config
-         )
-         self.animation = animation
-         subscribeToAnimation(animation)
-       }
-     }
-   }
-  private func subscribeToAnimation(_ animation: DotLottieAnimation) {
-    // Subscribe to regular animation events
-    let eventObserver = DotLottieEventObserver(dataStore: self)
-    observer = eventObserver
-    animation.subscribe(observer: eventObserver)
-
-    // Subscribe to state machine events
-    let stateMachineObserver = DotLottieStateMachineObserver(dataStore: self)
-    self.stateMachineObserver = stateMachineObserver
-    _ = animation.stateMachineSubscribe(stateMachineObserver)
-  }
-
-  private func buildLayout() -> DotLottie.Layout? {
-    guard let dict = layoutConfig else { return nil }
-    let fitString = (dict["fit"] as? String) ?? "contain"
-    let fit: Fit = {
-      switch fitString {
-      case "cover": return .cover
-      case "fill": return .fill
-      case "fit-width": return .fitWidth
-      case "fit-height": return .fitHeight
-      case "none": return .none
-      default: return .contain
-      }
-    }()
-    var alignX: Float = 0.5
-    var alignY: Float = 0.5
-    if let alignArr = dict["align"] as? [NSNumber], alignArr.count == 2 {
-      alignX = Float(truncating: alignArr[0])
-      alignY = Float(truncating: alignArr[1])
-    }
-    return DotLottie.Layout(fit: fit, alignX: alignX, alignY: alignY)
-  }
-
-  /// Applies the current `layoutConfig` to a live animation without reloading
-  /// it. Returns `false` when there is no animation yet, so the caller can fall
-  /// back to (re)creating one with the layout baked into its config.
-  @discardableResult
-  func applyLayout() -> Bool {
-    guard let animation = animation else { return false }
-    let layout = buildLayout() ?? DotLottie.Layout(fit: .contain, alignX: 0.5, alignY: 0.5)
-    
-    animation.setLayout(layout: layout)
-    return true
-  }
-
-   func buildAnimationConfig() -> AnimationConfig {
-     // Convert playMode to Mode enum
-     let mode: Mode = {
-       switch playMode {
-       case 0: return .forward
-       case 1: return .reverse
-       case 2: return .bounce
-       case 3: return .reverseBounce
-       default: return .forward
-       }
-     }()
-
-     // Convert segment array to tuple
-     let segments: (Float, Float)? = {
-       if let segmentArray = segment as? [NSNumber], segmentArray.count == 2 {
-         return (Float(truncating: segmentArray[0]), Float(truncating: segmentArray[1]))
-       }
-       return nil
-     }()
-
-     // Build config with all available properties
-     return AnimationConfig(
-       autoplay: autoplay,
-       loop: loop,
-       mode: mode,
-       speed: Float(speed),
-       useFrameInterpolation: useFrameInterpolation,
-       segments: segments,
-       backgroundColor: nil,
-       width: nil,  // Use default
-       height: nil,  // Use default
-       layout: buildLayout(),
-       marker: marker != "" ? String(marker) : "",
-       themeId: themeId != "" ? String(themeId) : "",
-       stateMachineId: stateMachineId != "" ? String(stateMachineId) : ""
-     )
-   }
-
-  func cleanupAnimation() {
-     // Unsubscribe regular observer if it exists
-     if let observer = self.observer, let animation = self.animation {
-       animation.unsubscribe(observer: observer)
-     }
-
-     // Unsubscribe state machine observer if it exists
-     if let stateMachineObserver = self.stateMachineObserver, let animation = self.animation {
-       _ = animation.stateMachineUnsubscribe(stateMachineObserver)
-     }
-
-    self.observer = nil
-    self.stateMachineObserver = nil
-    self.animation = nil
-  }
-}
-
-
-
-
-
-
-
-
-
-
-class DotLottieEventObserver: Observer {
-    var dataStore: Datastore
-
-      init(dataStore: Datastore) {
-          self.dataStore = dataStore
-      }
-    func onComplete() {
-        dataStore.onComplete([:])
-    }
-
-    func onFrame(frameNo: Float) {
-        dataStore.onFrame(["frameNo" : Double(frameNo)])
-    }
-
-    func onLoad() {
-        dataStore.onLoad([:])
-    }
-
-    func onLoadError() {
-        dataStore.onLoadError([:])
-    }
-
-    func onLoop(loopCount: UInt32) {
-      dataStore.onLoop(["loopCount" : loopCount])
-    }
-
-    func onPause() {
-        dataStore.onPause([:])
-    }
-
-    func onPlay() {
-        dataStore.onPlay([:])
-    }
-
-    func onRender(frameNo: Float) {
-        dataStore.onRender(["frameNo" : Double(frameNo)])
-    }
-
-    func onStop() {
-        dataStore.onStop([:])
-    }
-
-}
-
-class DotLottieStateMachineObserver: StateMachineObserver {
-    var dataStore: Datastore
-
-    init(dataStore: Datastore) {
-        self.dataStore = dataStore
-    }
-
-    func onStart() {
-        dataStore.onStateMachineStart([:])
-    }
-
-    func onStop() {
-        dataStore.onStateMachineStop([:])
-    }
-
-    func onStateEntered(enteringState: String) {
-        dataStore.onStateMachineStateEntered(["enteringState": enteringState])
-    }
-
-    func onStateExit(leavingState: String) {
-        dataStore.onStateMachineStateExit(["leavingState": leavingState])
-    }
-
-    func onTransition(previousState: String, newState: String) {
-        dataStore.onStateMachineTransition([
-            "previousState": previousState,
-            "newState": newState
-        ])
-    }
-
-    func onBooleanInputValueChange(inputName: String, oldValue: Bool, newValue: Bool) {
-        dataStore.onStateMachineBooleanInputChange([
-            "inputName": inputName,
-            "oldValue": oldValue,
-            "newValue": newValue
-        ])
-    }
-
-    func onNumericInputValueChange(inputName: String, oldValue: Float, newValue: Float) {
-        dataStore.onStateMachineNumericInputChange([
-            "inputName": inputName,
-            "oldValue": Double(oldValue),
-            "newValue": Double(newValue)
-        ])
-    }
-
-    func onStringInputValueChange(inputName: String, oldValue: String, newValue: String) {
-        dataStore.onStateMachineStringInputChange([
-            "inputName": inputName,
-            "oldValue": oldValue,
-            "newValue": newValue
-        ])
-    }
-
-    func onInputFired(inputName: String) {
-        dataStore.onStateMachineInputFired(["inputName": inputName])
-    }
-
-    func onCustomEvent(message: String) {
-        dataStore.onStateMachineCustomEvent(["message": message])
-    }
-
-    func onError(message: String) {
-        dataStore.onStateMachineError(["message": message])
-    }
-}
-
-
-
-struct AnimationView: View {
-    @EnvironmentObject var dataStore: Datastore
-
-
-    var body: some View {
-      if let animation = dataStore.animation {
-                  DotLottieView(dotLottie: animation)
-                      .onDisappear {
-                          cleanupAnimation()
-                      }
-              } else {
-                  Text("Loading animation...")
-                      .onAppear {
-                          dataStore.createAnimation()
-                      }
-              }
-    }
-
-
-
-  func cleanupAnimation() {
-          dataStore.cleanupAnimation()
-      }
-}
-
+import UIKit
 
 @objc(DotlottieReactNativeViewManager)
 class DotlottieReactNativeViewManager: RCTViewManager {
@@ -327,17 +8,11 @@ class DotlottieReactNativeViewManager: RCTViewManager {
     return DotlottieReactNativeView()
   }
 
-
-
-
-
   @objc
   func pause(_ node:NSNumber) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      if let animation = dotLottieView._animation {
-        let _ = animation.pause()
-      }
+      dotLottieView.backend?.pause()
     }
   }
 
@@ -345,29 +20,23 @@ class DotlottieReactNativeViewManager: RCTViewManager {
   func stop(_ node:NSNumber) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      if let animation = dotLottieView._animation {
-        let _ = animation.stop()
-      }
+      dotLottieView.backend?.stop()
     }
   }
 
   @objc
   func play(_ node:NSNumber) {
-      DispatchQueue.main.async {
-        let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-        guard let animation = dotLottieView._animation else {
-          return
-        }
-
-        let _ = animation.play()
-      }
+    DispatchQueue.main.async {
+      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
+      dotLottieView.backend?.play()
     }
+  }
 
   @objc
   func setLoop(_ node:NSNumber, loop:Bool) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setLoop(loop: loop)
+      dotLottieView.backend?.setLoop(loop)
     }
   }
 
@@ -375,7 +44,7 @@ class DotlottieReactNativeViewManager: RCTViewManager {
     DispatchQueue.main.async {
       let convertedSpeed = Float(truncating: speed)
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setSpeed(speed: convertedSpeed)
+      dotLottieView.backend?.setSpeed(convertedSpeed)
     }
   }
 
@@ -383,7 +52,7 @@ class DotlottieReactNativeViewManager: RCTViewManager {
     DispatchQueue.main.async {
       let convertedFrame = Float(truncating: frame)
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setFrame(frame: convertedFrame)
+      dotLottieView.backend?.setFrame(convertedFrame)
     }
   }
 
@@ -400,49 +69,49 @@ class DotlottieReactNativeViewManager: RCTViewManager {
   @objc func stateMachineStart(_ node:NSNumber) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineStart()
+      dotLottieView.backend?.stateMachineStart()
     }
   }
 
   @objc func stateMachineStop(_ node:NSNumber) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineStop()
+      dotLottieView.backend?.stateMachineStop()
     }
   }
 
   @objc func stateMachineLoad(_ node:NSNumber, stateMachineId: NSString) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineLoad(id: String(stateMachineId))
+      dotLottieView.backend?.stateMachineLoad(id: String(stateMachineId))
     }
   }
 
   @objc func stateMachineFire(_ node:NSNumber, event: NSString) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      dotLottieView._animation?.stateMachineFire(event: String(event))
+      dotLottieView.backend?.stateMachineFire(event: String(event))
     }
   }
 
   @objc func stateMachineSetNumericInput(_ node:NSNumber, key: NSString, value: NSNumber) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineSetNumericInput(key: String(key), value: Float(truncating: value))
+      dotLottieView.backend?.stateMachineSetNumericInput(key: String(key), value: Float(truncating: value))
     }
   }
 
   @objc func stateMachineSetStringInput(_ node:NSNumber, key: NSString, value: NSString) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineSetStringInput(key: String(key), value: String(value))
+      dotLottieView.backend?.stateMachineSetStringInput(key: String(key), value: String(value))
     }
   }
 
   @objc func stateMachineSetBooleanInput(_ node:NSNumber, key: NSString, value: Bool) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineSetBooleanInput(key: String(key), value: value)
+      dotLottieView.backend?.stateMachineSetBooleanInput(key: String(key), value: value)
     }
   }
 
@@ -450,30 +119,29 @@ class DotlottieReactNativeViewManager: RCTViewManager {
     DispatchQueue.main.async {
       let start = Float(truncating: start)
       let end = Float(truncating: end)
-      let segments: (Float, Float) = (start, end)
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setSegments(segments: segments)
+      dotLottieView.backend?.setSegment(start: start, end: end)
     }
   }
 
   @objc func setTheme(_ node:NSNumber, themeId: NSString) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setTheme(String(themeId))
+      dotLottieView.backend?.setTheme(String(themeId))
     }
   }
 
   @objc func loadAnimation(_ node:NSNumber, animationId: NSString) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      try? dotLottieView._animation?.loadAnimationById(String(animationId))
+      dotLottieView.backend?.loadAnimation(animationId: String(animationId))
     }
   }
 
   @objc func setFrameInterpolation(_ node:NSNumber, useFrameInterpolation:Bool) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setFrameInterpolation(useFrameInterpolation)
+      dotLottieView.backend?.setUseFrameInterpolation(useFrameInterpolation)
     }
   }
 
@@ -492,26 +160,23 @@ class DotlottieReactNativeViewManager: RCTViewManager {
       }()
 
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setMode(mode: actualMode)
+      dotLottieView.backend?.setMode(actualMode)
     }
   }
 
   @objc func setMarker(_ node:NSNumber, marker:NSString) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setMarker(marker: String(marker))
+      dotLottieView.backend?.setMarker(String(marker))
     }
   }
 
   @objc func resize(_ node:NSNumber, width:NSNumber, height:NSNumber) {
     DispatchQueue.main.async {
       let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.resize(width: Int(truncating: width), height: Int(truncating: height))
+      dotLottieView.backend?.resize(width: Int(truncating: width), height: Int(truncating: height))
     }
   }
-
-
-
 
   @objc override static func requiresMainQueueSetup() -> Bool {
     return true
@@ -520,18 +185,25 @@ class DotlottieReactNativeViewManager: RCTViewManager {
 }
 
 class DotlottieReactNativeView: UIView {
-  private var hostingController: UIHostingController<AnyView>?
+  /// The active render backend. Internal (not private): read cross-file by
+  /// `DotlottieReactNativeViewManager` (commands) and `DotlottieReactNativeModule`
+  /// (metrics), exactly like the previous `dataStore`.
+  var backend: DotLottieRenderable?
+
+  /// Shared, renderer-agnostic config snapshot. Passed by reference to the
+  /// backend so prop changes stay visible when the backend rebuilds.
+  private let config = RendererConfig()
+
+  /// Requested renderer, locked on first backend creation (mirrors Android).
+  private var requestedRenderer = "sw"
+  private var rendererLocked = false
+
   private var isMountedToWindow: Bool = false
   private var isReleased: Bool = false
   private var pendingAnimationUpdate: Bool = false
-  let dataStore: Datastore = .init()
-  var _animation: DotLottieAnimation? {
-    dataStore.animation
-  }
 
   override init(frame: CGRect) {
     super.init(frame: frame)
-    setupHostingControllerIfNeeded()
   }
 
   required init?(coder: NSCoder) {
@@ -556,17 +228,15 @@ class DotlottieReactNativeView: UIView {
     isMountedToWindow = currentlyMounted
 
     if currentlyMounted {
-      setupHostingControllerIfNeeded()
       scheduleAnimationUpdate()
     } else {
-      dataStore.cleanupAnimation()
-      tearDownHostingController()
+      teardownBackend()
     }
   }
 
   override func layoutSubviews() {
     super.layoutSubviews()
-    hostingController?.view.frame = bounds
+    backend?.platformView.frame = bounds
   }
 
   func releaseResources() {
@@ -577,62 +247,49 @@ class DotlottieReactNativeView: UIView {
     isReleased = true
     isMountedToWindow = false
     pendingAnimationUpdate = false
-    dataStore.cleanupAnimation()
-    tearDownHostingController()
-    resetEventHandlers()
+    teardownBackend()
   }
 
-  private func setupHostingControllerIfNeeded() {
-    guard hostingController == nil, !isReleased else {
-      return
+  /// Creates the selected backend on first activation. The renderer choice is
+  /// locked here so a late `renderer` prop change is ignored (matches Android).
+  private func makeBackend() -> DotLottieRenderable {
+    rendererLocked = true
+    #if (os(iOS) && !targetEnvironment(macCatalyst))
+    if requestedRenderer == "wg" {
+      return WebGPURenderBackend(config: config, eventTarget: self)
     }
+    #else
+    if requestedRenderer == "wg" {
+      print("[DotLottie] wg is unavailable on this platform; falling back to software renderer")
+    }
+    #endif
+    return SoftwareRenderBackend(config: config, eventTarget: self)
+  }
 
-    let rootView = AnyView(AnimationView().environmentObject(dataStore))
-    let controller = UIHostingController(rootView: rootView)
-    controller.view.backgroundColor = .clear
-    controller.view.frame = bounds
-    controller.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    addSubview(controller.view)
-    hostingController = controller
+  /// Lazily creates and mounts the backend. Called from `didMoveToWindow` on first
+  /// window attach — deliberately NOT from a prop `didSet`. `makeBackend()` locks the
+  /// renderer on first creation, and RN does not guarantee `renderer` is applied
+  /// before `source`, so we wait until the full initial prop batch is in before
+  /// choosing (and locking) the backend.
+  private func ensureBackend() {
+    guard backend == nil, !isReleased else { return }
+    let b = makeBackend()
+    addSubview(b.platformView)
+    b.platformView.frame = bounds
+    backend = b
     setNeedsLayout()
   }
 
-  private func tearDownHostingController() {
-    guard let controller = hostingController else {
-      return
-    }
-
-    controller.view.removeFromSuperview()
-    hostingController = nil
+  private func teardownBackend() {
+    backend?.cleanup()
+    backend?.platformView.removeFromSuperview()
+    backend = nil
   }
 
   private func performIfActive(_ action: () -> Void) {
     if !isReleased {
       action()
     }
-  }
-
-  private func resetEventHandlers() {
-    dataStore.onPlay = { _ in }
-    dataStore.onLoad = { _ in }
-    dataStore.onLoadError = { _ in }
-    dataStore.onLoop = { _ in }
-    dataStore.onFrame = { _ in }
-    dataStore.onRender = { _ in }
-    dataStore.onComplete = { _ in }
-    dataStore.onPause = { _ in }
-    dataStore.onStop = { _ in }
-    dataStore.onStateMachineStart = { _ in }
-    dataStore.onStateMachineStop = { _ in }
-    dataStore.onStateMachineStateEntered = { _ in }
-    dataStore.onStateMachineStateExit = { _ in }
-    dataStore.onStateMachineTransition = { _ in }
-    dataStore.onStateMachineBooleanInputChange = { _ in }
-    dataStore.onStateMachineNumericInputChange = { _ in }
-    dataStore.onStateMachineStringInputChange = { _ in }
-    dataStore.onStateMachineInputFired = { _ in }
-    dataStore.onStateMachineCustomEvent = { _ in }
-    dataStore.onStateMachineError = { _ in }
   }
 
   private func scheduleAnimationUpdate() {
@@ -645,15 +302,38 @@ class DotlottieReactNativeView: UIView {
     }
 
     pendingAnimationUpdate = true
-    dataStore.createAnimation()
+    ensureBackend()
+    backend?.loadSource(config.source)
     pendingAnimationUpdate = false
+  }
+
+  @objc var renderer: NSString = "sw" {
+    didSet {
+      guard !rendererLocked else {
+        #if DEBUG
+        if requestedRenderer != (renderer as String) {
+          print("[DotLottie] renderer is locked after first set; ignoring change to \(renderer)")
+        }
+        #endif
+        return
+      }
+      requestedRenderer = renderer as String
+    }
   }
 
   @objc var source: NSString = "" {
     didSet {
       performIfActive {
-        dataStore.source = source
-        scheduleAnimationUpdate()
+        config.source = source as String
+        // Backend creation (which locks the renderer) is deferred to the first
+        // window attach (`didMoveToWindow`), by which point RN has applied the
+        // entire initial prop batch — including `renderer`. Creating the backend
+        // here, before `renderer` is guaranteed to have been set, would wrongly
+        // latch a `renderer="wg"` view to software. If the backend already
+        // exists (a later source change while mounted), reload immediately.
+        if backend != nil {
+          scheduleAnimationUpdate()
+        }
       }
     }
   }
@@ -661,8 +341,8 @@ class DotlottieReactNativeView: UIView {
   @objc var loop: Bool = false {
     didSet {
       performIfActive {
-        dataStore.loop = loop
-        _animation?.setLoop(loop: loop)
+        config.loop = loop
+        backend?.setLoop(loop)
       }
     }
   }
@@ -670,11 +350,11 @@ class DotlottieReactNativeView: UIView {
   @objc var autoplay: Bool = true {
     didSet {
       performIfActive {
-        dataStore.autoplay = autoplay
+        config.autoplay = autoplay
         if autoplay {
-          _ = _animation?.play()
+          backend?.play()
         } else {
-          _ = _animation?.pause()
+          backend?.pause()
         }
       }
     }
@@ -684,8 +364,8 @@ class DotlottieReactNativeView: UIView {
     didSet {
       performIfActive {
         let speedValue = speed.doubleValue
-        dataStore.speed = speedValue
-        _animation?.setSpeed(speed: Float(speedValue))
+        config.speed = speedValue
+        backend?.setSpeed(Float(speedValue))
       }
     }
   }
@@ -693,9 +373,9 @@ class DotlottieReactNativeView: UIView {
   @objc var themeId: NSString = "" {
     didSet {
       performIfActive {
-        dataStore.themeId = themeId
+        config.themeId = themeId as String
         if themeId != "" {
-          _animation?.setTheme(String(themeId))
+          backend?.setTheme(themeId as String)
         }
       }
     }
@@ -704,9 +384,9 @@ class DotlottieReactNativeView: UIView {
   @objc var marker: NSString = "" {
     didSet {
       performIfActive {
-        dataStore.marker = marker
+        config.marker = marker as String
         if marker != "" {
-          _animation?.setMarker(marker: String(marker))
+          backend?.setMarker(marker as String)
         }
       }
     }
@@ -715,15 +395,14 @@ class DotlottieReactNativeView: UIView {
   @objc var segment: NSArray? {
     didSet {
       performIfActive {
-        dataStore.segment = segment
+        config.segment = segment as? [NSNumber]
         if let segmentArray = segment as? [NSNumber], segmentArray.count == 2 {
           let start = Float(truncating: segmentArray[0])
           let end = Float(truncating: segmentArray[1])
-          _animation?.setSegments(segments: (start, end))
-        } else if segment == nil, let animation = _animation {
+          backend?.setSegment(start: start, end: end)
+        } else if segment == nil {
           // Reset to full animation range when segment is undefined
-          let totalFrames = animation.totalFrames()
-          _animation?.setSegments(segments: (0, totalFrames))
+          backend?.clearSegment()
         }
       }
     }
@@ -732,17 +411,8 @@ class DotlottieReactNativeView: UIView {
   @objc var playMode: NSNumber = 0 {
     didSet {
       performIfActive {
-        dataStore.playMode = playMode.intValue
-        let mode: Mode = {
-          switch playMode.intValue {
-          case 0: return .forward
-          case 1: return .reverse
-          case 2: return .bounce
-          case 3: return .reverseBounce
-          default: return .forward
-          }
-        }()
-        _animation?.setMode(mode: mode)
+        config.playMode = playMode.intValue
+        backend?.setMode(config.toMode())
       }
     }
   }
@@ -750,8 +420,8 @@ class DotlottieReactNativeView: UIView {
   @objc var useFrameInterpolation: Bool = false {
     didSet {
       performIfActive {
-        dataStore.useFrameInterpolation = useFrameInterpolation
-        _animation?.setFrameInterpolation(useFrameInterpolation)
+        config.useFrameInterpolation = useFrameInterpolation
+        backend?.setUseFrameInterpolation(useFrameInterpolation)
       }
     }
   }
@@ -759,14 +429,12 @@ class DotlottieReactNativeView: UIView {
   @objc var layout: NSDictionary? {
     didSet {
       performIfActive {
-        dataStore.layoutConfig = layout
+        config.layoutConfig = layout
         // Prefer the SDK's runtime setLayout (no reload) so the fit/align change
-        // applies to the existing, already-sized render surface. Fall back to
-        // (re)creating the animation when one doesn't exist yet, so the layout
-        // is baked into its initial config.
-        if !dataStore.applyLayout() {
-          scheduleAnimationUpdate()
-        }
+        // applies to the existing, already-sized render surface. The backend
+        // falls back to (re)creating the animation when one doesn't exist yet,
+        // so the layout is baked into its initial config.
+        backend?.setLayout(config.toLayout())
       }
     }
   }
@@ -774,141 +442,63 @@ class DotlottieReactNativeView: UIView {
   @objc var stateMachineId: NSString = "" {
     didSet {
       performIfActive {
-        dataStore.stateMachineId = stateMachineId
+        config.stateMachineId = stateMachineId as String
         if stateMachineId != "" {
           // Load and start the state machine
-          let result = _animation?.stateMachineLoad(id: String(stateMachineId))
-          if result != nil {
-            _ = _animation?.stateMachineStart()
-          }
+          backend?.stateMachineLoad(id: stateMachineId as String)
+          backend?.stateMachineStart()
         } else {
           // Stop the state machine when stateMachineId is empty/undefined
-          _ = _animation?.stateMachineStop()
+          backend?.stateMachineStop()
         }
       }
     }
   }
 
-    @objc var onPlay: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onPlay = onPlay
-        }
-      }
+  // MARK: - Event blocks
+  // These stay on the view (registered in the .m) as the single source of truth.
+  // SDK events reach them through `DotLottieEventTarget` (see extension below).
 
-    @objc var onLoop: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onLoop = onLoop
-        }
-      }
+  @objc var onPlay: RCTDirectEventBlock = { _ in }
+  @objc var onLoop: RCTDirectEventBlock = { _ in }
+  @objc var onLoadError: RCTDirectEventBlock = { _ in }
+  @objc var onLoad: RCTDirectEventBlock = { _ in }
+  @objc var onFrame: RCTDirectEventBlock = { _ in }
+  @objc var onRender: RCTDirectEventBlock = { _ in }
+  @objc var onComplete: RCTDirectEventBlock = { _ in }
+  @objc var onPause: RCTDirectEventBlock = { _ in }
+  @objc var onStop: RCTDirectEventBlock = { _ in }
 
+  // State machine events
+  @objc var onStateMachineStart: RCTDirectEventBlock = { _ in }
+  @objc var onStateMachineStop: RCTDirectEventBlock = { _ in }
+  @objc var onStateMachineStateEntered: RCTDirectEventBlock = { _ in }
+  @objc var onStateMachineStateExit: RCTDirectEventBlock = { _ in }
+  @objc var onStateMachineTransition: RCTDirectEventBlock = { _ in }
+  @objc var onStateMachineBooleanInputChange: RCTDirectEventBlock = { _ in }
+  @objc var onStateMachineNumericInputChange: RCTDirectEventBlock = { _ in }
+  @objc var onStateMachineStringInputChange: RCTDirectEventBlock = { _ in }
+  @objc var onStateMachineInputFired: RCTDirectEventBlock = { _ in }
+  @objc var onStateMachineCustomEvent: RCTDirectEventBlock = { _ in }
+  @objc var onStateMachineError: RCTDirectEventBlock = { _ in }
+}
 
-    @objc var onLoadError: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onLoadError = onLoadError
-        }
-      }
-
-    @objc var onLoad: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onLoad = onLoad
-        }
-      }
-
-    @objc var onFrame: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onFrame = onFrame
-        }
-      }
-
-    @objc var onRender: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onRender = onRender
-        }
-      }
-
-    @objc var onComplete: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onComplete = onComplete
-        }
-      }
-
-    @objc var onPause: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onPause = onPause
-        }
-      }
-
-    @objc var onStop: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStop = onStop
-        }
-      }
-
-    // State machine events
-    @objc var onStateMachineStart: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineStart = onStateMachineStart
-        }
-      }
-
-    @objc var onStateMachineStop: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineStop = onStateMachineStop
-        }
-      }
-
-    @objc var onStateMachineStateEntered: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineStateEntered = onStateMachineStateEntered
-        }
-      }
-
-    @objc var onStateMachineStateExit: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineStateExit = onStateMachineStateExit
-        }
-      }
-
-    @objc var onStateMachineTransition: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineTransition = onStateMachineTransition
-        }
-      }
-
-    @objc var onStateMachineBooleanInputChange: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineBooleanInputChange = onStateMachineBooleanInputChange
-        }
-      }
-
-    @objc var onStateMachineNumericInputChange: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineNumericInputChange = onStateMachineNumericInputChange
-        }
-      }
-
-    @objc var onStateMachineStringInputChange: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineStringInputChange = onStateMachineStringInputChange
-        }
-      }
-
-    @objc var onStateMachineInputFired: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineInputFired = onStateMachineInputFired
-        }
-      }
-
-    @objc var onStateMachineCustomEvent: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineCustomEvent = onStateMachineCustomEvent
-        }
-      }
-
-    @objc var onStateMachineError: RCTDirectEventBlock = {_ in} {
-        didSet{
-          dataStore.onStateMachineError = onStateMachineError
-        }
-      }
-
+// MARK: - DotLottieEventTarget
+// Each emit* forwards the SDK event to the matching @objc RCTDirectEventBlock.
+extension DotlottieReactNativeView: DotLottieEventTarget {
+  func emitPlay() { onPlay([:]) }
+  func emitPause() { onPause([:]) }
+  func emitStop() { onStop([:]) }
+  func emitLoad() { onLoad([:]) }
+  func emitLoadError() { onLoadError([:]) }
+  func emitComplete() { onComplete([:]) }
+  func emitLoop(_ loopCount: UInt32) { onLoop(["loopCount": loopCount]) }
+  func emitFrame(_ frameNo: Float) { onFrame(["frameNo": Double(frameNo)]) }
+  func emitRender(_ frameNo: Float) { onRender(["frameNo": Double(frameNo)]) }
+  func emitStateMachineTransition(previousState: String, newState: String) {
+    onStateMachineTransition(["previousState": previousState, "newState": newState])
+  }
+  func emitStateMachineStateEntered(_ state: String) { onStateMachineStateEntered(["enteringState": state]) }
+  func emitStateMachineStateExit(_ state: String) { onStateMachineStateExit(["leavingState": state]) }
+  func emitStateMachineCustomEvent(_ message: String) { onStateMachineCustomEvent(["message": message]) }
 }
