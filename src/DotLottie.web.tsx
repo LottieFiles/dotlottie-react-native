@@ -57,7 +57,7 @@ interface DotlottieReactNativeProps {
   playMode?: Mode;
   useFrameInterpolation?: boolean;
   stateMachineId?: string;
-  renderer?: 'sw' | 'gl';
+  renderer?: 'sw' | 'gl' | 'wg';
   layout?: Layout;
   style?: any;
   ref?: MutableRefObject<any>;

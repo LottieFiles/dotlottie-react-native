@@ -20,7 +20,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let frames = Double(view._animation?.totalFrames() ?? 0)
+      let frames = Double(view.backend?.totalFrames ?? 0)
       resolve(frames)
     }
   }
@@ -32,7 +32,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let duration = Double(view._animation?.duration() ?? 0)
+      let duration = Double(view.backend?.duration ?? 0)
       resolve(duration)
     }
   }
@@ -44,7 +44,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let speed = Double(view._animation?.speed() ?? 0)
+      let speed = Double(view.backend?.speed ?? 0)
       resolve(speed)
     }
   }
@@ -56,7 +56,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let frame = Double(view._animation?.currentFrame() ?? 0)
+      let frame = Double(view.backend?.currentFrame ?? 0)
       resolve(frame)
     }
   }
@@ -68,7 +68,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let paused = view._animation?.isPaused() ?? false
+      let paused = view.backend?.isPaused ?? false
       resolve(paused)
     }
   }
@@ -80,7 +80,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let playing = view._animation?.isPlaying() ?? false
+      let playing = view.backend?.isPlaying ?? false
       resolve(playing)
     }
   }
@@ -92,7 +92,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let stopped = view._animation?.isStopped() ?? false
+      let stopped = view.backend?.isStopped ?? false
       resolve(stopped)
     }
   }
@@ -104,7 +104,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let loaded = view._animation?.isLoaded() ?? false
+      let loaded = view.backend?.isLoaded ?? false
       resolve(loaded)
     }
   }
@@ -116,7 +116,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let themeId = view._animation?.activeThemeId() ?? ""
+      let themeId = view.backend?.activeThemeId ?? ""
       resolve(themeId)
     }
   }
@@ -128,7 +128,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let animationId = view._animation?.activeAnimationId() ?? ""
+      let animationId = view.backend?.activeAnimationId ?? ""
       resolve(animationId)
     }
   }
@@ -140,7 +140,7 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      let loopCount = view._animation?.loopCount() ?? 0
+      let loopCount = view.backend?.loopCount ?? 0
       resolve(loopCount)
     }
   }

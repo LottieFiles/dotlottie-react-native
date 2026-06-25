@@ -199,6 +199,7 @@ const styles = StyleSheet.create({
 | `themeId`               | `string`                    | `undefined`   | The theme ID to apply to the animation.                                |
 | `stateMachineId`        | `string`                    | `undefined`   | The ID of the state machine to load and start automatically.           |
 | `layout`                | `{ fit?: Fit; align?: [number, number] }` | `undefined`   | Controls how the animation fits its container. `fit`: `contain` (default), `cover`, `fill`, `fit-width`, `fit-height`, `none`. `align`: crop anchor, each `0..1`, default `[0.5, 0.5]`. |
+| `renderer`              | `'sw' \| 'gl' \| 'wg'`                 | `'sw'`        | Render backend. **iOS:** `'wg'` uses the GPU/Metal renderer; `'sw'`/`'gl'` use the software renderer (iOS has no separate GL path). **Android:** `'gl'` → OpenGL, `'sw'` → Canvas, `'wg'` → Canvas fallback. Locked on first mount — change the `key` to switch. See [wg renderer](#wg-renderer-ios). |
 
 **Example — fill the container and crop the overflow:**
 
@@ -209,6 +210,21 @@ const styles = StyleSheet.create({
   layout={{ fit: 'cover' }}
 />
 ```
+
+### wg renderer (iOS)
+
+`renderer="wg"` renders on the GPU via `DotLottieWebGPUView` (Metal). Requires `dotlottie-ios` 0.16.2+.
+
+- **Sources:** local (`require()`, `file://`) and remote `http(s)` URLs both work. An invalid URL fires `onLoadError`.
+- **Locked on first mount:** change the React `key` to switch renderers at runtime.
+
+  ```tsx
+  const [renderer, setRenderer] = useState<Renderer>('sw');
+  <DotLottie key={renderer} renderer={renderer} source={require('./animation.lottie')} autoplay loop />
+  ```
+
+- **Android:** no WebGPU renderer — `wg` falls back to Canvas.
+- **Simulator:** some simulators lack a Metal device; test on a real device.
 
 ### Methods
 

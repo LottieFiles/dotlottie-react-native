@@ -33,7 +33,7 @@ export enum Mode {
   REVERSE_BOUNCE,
 }
 
-export type Renderer = 'sw' | 'gl';
+export type Renderer = 'sw' | 'gl' | 'wg';
 
 export type Dotlottie = {
   play: () => void;

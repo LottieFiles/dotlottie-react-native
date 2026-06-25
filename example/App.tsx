@@ -10,6 +10,7 @@ import {
 import { LifecycleExample } from './examples/LifecycleExample';
 import { StateMachineExample } from './examples/StateMachineExample';
 import { MultipleAnimationsTest } from './examples/MultipleAnimationsTest';
+import { RendererSwitchExample } from './examples/RendererSwitchExample';
 import { SourceLoadingExample } from './examples/SourceLoadingExample';
 import { LayoutFitExample } from './examples/LayoutFitExample';
 
@@ -21,6 +22,13 @@ type ExampleDescriptor = {
 };
 
 const EXAMPLES: ExampleDescriptor[] = [
+  {
+    key: 'renderer-switch',
+    title: 'Renderer Switch (sw / gl / wg)',
+    description:
+      'Toggle the iOS render backend. wg is GPU/Metal (iOS, local sources).',
+    Component: RendererSwitchExample,
+  },
   {
     key: 'source-loading',
     title: 'Source Loading',
