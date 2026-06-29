@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.11.0
+### Minor Changes
+
+
+
+- [#70](https://github.com/LottieFiles/dotlottie-react-native/pull/70) [`93ecb37`](https://github.com/LottieFiles/dotlottie-react-native/commit/93ecb37180bf0d0022e95c5146248e1f415271f3) Thanks [@theashraf](https://github.com/theashraf)! - chore: upgrade native players — dotlottie-ios `0.15.7` → `0.16.2`, dotlottie-android `0.13.8` → `0.14.2`.
+
+
+### Patch Changes
+
+
+
+- [#74](https://github.com/LottieFiles/dotlottie-react-native/pull/74) [`f9e6243`](https://github.com/LottieFiles/dotlottie-react-native/commit/f9e624345a6de0076051fa46ef97fd69b1d69926) Thanks [@theashraf](https://github.com/theashraf)! - fix(ios): prevent crash when an imperative command (play/stop/…) runs after the view unmounts.
+
 ## 0.10.0
 ### Minor Changes
 
