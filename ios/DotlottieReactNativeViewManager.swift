@@ -331,59 +331,52 @@ class DotlottieReactNativeViewManager: RCTViewManager {
 
 
 
+  private func withDotlottieView(_ node: NSNumber, _ block: @escaping (DotlottieReactNativeView) -> Void) {
+    DispatchQueue.main.async {
+      guard let view = self.bridge.uiManager?.view(forReactTag: node) as? DotlottieReactNativeView else {
+        return
+      }
+      block(view)
+    }
+  }
+
   @objc
   func pause(_ node:NSNumber) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      if let animation = dotLottieView._animation {
-        let _ = animation.pause()
-      }
+    withDotlottieView(node) { view in
+      _ = view._animation?.pause()
     }
   }
 
   @objc
   func stop(_ node:NSNumber) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      if let animation = dotLottieView._animation {
-        let _ = animation.stop()
-      }
+    withDotlottieView(node) { view in
+      _ = view._animation?.stop()
     }
   }
 
   @objc
   func play(_ node:NSNumber) {
-      DispatchQueue.main.async {
-        let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-        guard let animation = dotLottieView._animation else {
-          return
-        }
-
-        let _ = animation.play()
-      }
+    withDotlottieView(node) { view in
+      _ = view._animation?.play()
     }
+  }
 
   @objc
   func setLoop(_ node:NSNumber, loop:Bool) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setLoop(loop: loop)
+    withDotlottieView(node) { view in
+      _ = view._animation?.setLoop(loop: loop)
     }
   }
 
   @objc func setSpeed(_ node:NSNumber, speed:NSNumber) {
-    DispatchQueue.main.async {
-      let convertedSpeed = Float(truncating: speed)
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setSpeed(speed: convertedSpeed)
+    withDotlottieView(node) { view in
+      _ = view._animation?.setSpeed(speed: Float(truncating: speed))
     }
   }
 
   @objc func setFrame(_ node:NSNumber, frame:NSNumber) {
-    DispatchQueue.main.async {
-      let convertedFrame = Float(truncating: frame)
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setFrame(frame: convertedFrame)
+    withDotlottieView(node) { view in
+      _ = view._animation?.setFrame(frame: Float(truncating: frame))
     }
   }
 
@@ -398,88 +391,74 @@ class DotlottieReactNativeViewManager: RCTViewManager {
   }
 
   @objc func stateMachineStart(_ node:NSNumber) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineStart()
+    withDotlottieView(node) { view in
+      _ = view._animation?.stateMachineStart()
     }
   }
 
   @objc func stateMachineStop(_ node:NSNumber) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineStop()
+    withDotlottieView(node) { view in
+      _ = view._animation?.stateMachineStop()
     }
   }
 
   @objc func stateMachineLoad(_ node:NSNumber, stateMachineId: NSString) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineLoad(id: String(stateMachineId))
+    withDotlottieView(node) { view in
+      _ = view._animation?.stateMachineLoad(id: String(stateMachineId))
     }
   }
 
   @objc func stateMachineFire(_ node:NSNumber, event: NSString) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      dotLottieView._animation?.stateMachineFire(event: String(event))
+    withDotlottieView(node) { view in
+      view._animation?.stateMachineFire(event: String(event))
     }
   }
 
   @objc func stateMachineSetNumericInput(_ node:NSNumber, key: NSString, value: NSNumber) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineSetNumericInput(key: String(key), value: Float(truncating: value))
+    withDotlottieView(node) { view in
+      _ = view._animation?.stateMachineSetNumericInput(key: String(key), value: Float(truncating: value))
     }
   }
 
   @objc func stateMachineSetStringInput(_ node:NSNumber, key: NSString, value: NSString) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineSetStringInput(key: String(key), value: String(value))
+    withDotlottieView(node) { view in
+      _ = view._animation?.stateMachineSetStringInput(key: String(key), value: String(value))
     }
   }
 
   @objc func stateMachineSetBooleanInput(_ node:NSNumber, key: NSString, value: Bool) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.stateMachineSetBooleanInput(key: String(key), value: value)
+    withDotlottieView(node) { view in
+      _ = view._animation?.stateMachineSetBooleanInput(key: String(key), value: value)
     }
   }
 
   @objc func setSegment(_ node:NSNumber, start:NSNumber, end:NSNumber) {
-    DispatchQueue.main.async {
-      let start = Float(truncating: start)
-      let end = Float(truncating: end)
-      let segments: (Float, Float) = (start, end)
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setSegments(segments: segments)
+    withDotlottieView(node) { view in
+      let segments: (Float, Float) = (Float(truncating: start), Float(truncating: end))
+      _ = view._animation?.setSegments(segments: segments)
     }
   }
 
   @objc func setTheme(_ node:NSNumber, themeId: NSString) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setTheme(String(themeId))
+    withDotlottieView(node) { view in
+      _ = view._animation?.setTheme(String(themeId))
     }
   }
 
   @objc func loadAnimation(_ node:NSNumber, animationId: NSString) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      try? dotLottieView._animation?.loadAnimationById(String(animationId))
+    withDotlottieView(node) { view in
+      try? view._animation?.loadAnimationById(String(animationId))
     }
   }
 
   @objc func setFrameInterpolation(_ node:NSNumber, useFrameInterpolation:Bool) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setFrameInterpolation(useFrameInterpolation)
+    withDotlottieView(node) { view in
+      _ = view._animation?.setFrameInterpolation(useFrameInterpolation)
     }
   }
 
   @objc func setPlayMode(_ node:NSNumber, mode:NSNumber) {
-    DispatchQueue.main.async {
-
+    withDotlottieView(node) { view in
       let actualMode: Mode = {
         switch mode {
         case 0: return .forward
@@ -490,23 +469,19 @@ class DotlottieReactNativeViewManager: RCTViewManager {
           return .forward
         }
       }()
-
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setMode(mode: actualMode)
+      _ = view._animation?.setMode(mode: actualMode)
     }
   }
 
   @objc func setMarker(_ node:NSNumber, marker:NSString) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.setMarker(marker: String(marker))
+    withDotlottieView(node) { view in
+      _ = view._animation?.setMarker(marker: String(marker))
     }
   }
 
   @objc func resize(_ node:NSNumber, width:NSNumber, height:NSNumber) {
-    DispatchQueue.main.async {
-      let dotLottieView = self.bridge.uiManager.view(forReactTag: node) as! DotlottieReactNativeView
-      _ = dotLottieView._animation?.resize(width: Int(truncating: width), height: Int(truncating: height))
+    withDotlottieView(node) { view in
+      _ = view._animation?.resize(width: Int(truncating: width), height: Int(truncating: height))
     }
   }
 
