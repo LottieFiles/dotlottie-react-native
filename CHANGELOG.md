@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.11.1
+### Patch Changes
+
+
+
+- [#75](https://github.com/LottieFiles/dotlottie-react-native/pull/75) [`16ee27c`](https://github.com/LottieFiles/dotlottie-react-native/commit/16ee27c93dcd925bff5b0ced871d21827b9325a3) Thanks [@theashraf](https://github.com/theashraf)! - fix(android): keep animations rendering after navigating away and back
+
 ## 0.11.0
 ### Minor Changes
 
