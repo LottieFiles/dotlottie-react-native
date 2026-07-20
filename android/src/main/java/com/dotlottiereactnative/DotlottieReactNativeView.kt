@@ -7,6 +7,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.setViewTreeLifecycleOwner
 import com.dotlottie.dlplayer.Fit
 import com.dotlottie.dlplayer.Mode
 import com.facebook.react.bridge.Arguments
@@ -22,7 +26,10 @@ import com.lottiefiles.dotlottie.core.util.DotLottieEventListener
 import com.lottiefiles.dotlottie.core.util.DotLottieSource
 import com.lottiefiles.dotlottie.core.util.StateMachineEventListener
 
-class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(context) {
+class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(context), LifecycleOwner {
+  private val lifecycleRegistry = LifecycleRegistry(this)
+  override val lifecycle: Lifecycle
+    get() = lifecycleRegistry
 
   private var reactContext: ReactContext = context.reactApplicationContext
   private var animationUrl = mutableStateOf<String?>(null)
@@ -65,6 +72,9 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
           }
 
   init {
+    lifecycleRegistry.currentState = Lifecycle.State.RESUMED
+    setViewTreeLifecycleOwner(this)
+    composeView.setViewTreeLifecycleOwner(this)
     addView(composeView)
     ensureStateMachineListener()
     // Composition is created once the view is attached (onAttachedToWindow /
@@ -516,6 +526,7 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     }
     isReleased = true
     cleanup()
+    lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
   }
 
   private fun cleanup() {
