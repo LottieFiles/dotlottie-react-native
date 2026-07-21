@@ -8,6 +8,9 @@
 
 <h1 align="center">dotLottie React Native</h1>
 
+> [!TIP]
+> Looking for animations to use with this player? Browse **[100,000+ free Lottie animations](https://lottiefiles.com/free-animations?utm_source=npm&utm_medium=readme)** and grab any of them as `.lottie` or `.json`, or create your own with [Lottie Creator](https://lottiefiles.com/lottie-creator?utm_source=npm&utm_medium=readme).
+
 Lottie & dotLottie component for React Native ([iOS](https://github.com/LottieFiles/dotlottie-ios/), [Android](https://github.com/LottieFiles/dotlottie-android/), and [Web](https://github.com/LottieFiles/dotlottie-web))
 
 ## Installation
