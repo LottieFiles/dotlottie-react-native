@@ -75,12 +75,12 @@
     "type": "git",
     "url": "git+https://github.com/LottieFiles/dotlottie-react-native.git"
   },
-  "author": "DotLottie <hello@dotlottie.com> (https://dotlottie.io/)",
+  "author": "DotLottie <hello@dotlottie.com> (https://lottiefiles.com/dotlottie)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/LottieFiles/dotlottie-react-native/issues"
   },
-  "homepage": "https://github.com/LottieFiles/dotlottie-react-native#readme",
+  "homepage": "https://docs.lottiefiles.com/en/runtimes/distributions/react-native?utm_source=npm&utm_medium=package",
   "expo": {
     "plugins": [
       "./plugin"
