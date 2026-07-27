@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.12.0
+### Minor Changes
+
+
+
+- [#78](https://github.com/LottieFiles/dotlottie-react-native/pull/78) [`80dbf15`](https://github.com/LottieFiles/dotlottie-react-native/commit/80dbf150c45ee8759140bd5c72c7cc417513c156) Thanks [@theashraf](https://github.com/theashraf)! - chore: upgrade native players — dotlottie-ios `0.16.2` → `0.16.5`, dotlottie-android `0.14.2` → `0.15.0`.
+
+
+### Patch Changes
+
+
+
+- [#81](https://github.com/LottieFiles/dotlottie-react-native/pull/81) [`0c7a3b6`](https://github.com/LottieFiles/dotlottie-react-native/commit/0c7a3b616ca02fa050774cd8e9fe139c6960ee7b) Thanks [@theashraf](https://github.com/theashraf)! - fix(ios): bump dotlottie-ios to `0.16.6`, fixing an intermittent `EXC_BAD_ACCESS` crash in `loadDotlottieData` when loading local `.lottie` files.
+
 ## 0.11.1
 ### Patch Changes
 
