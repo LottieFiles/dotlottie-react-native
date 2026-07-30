@@ -1,6 +1,6 @@
 {
   "name": "@lottiefiles/dotlottie-react-native",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "dotlottie react native",
   "source": "./src/index.ts",
   "main": "./lib/commonjs/index.js",
