@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.12.1
+### Patch Changes
+
+
+
+- [#82](https://github.com/LottieFiles/dotlottie-react-native/pull/82) [`f01081c`](https://github.com/LottieFiles/dotlottie-react-native/commit/f01081c586ad5bd10b154d7fac37cfcdf337c204) Thanks [@theashraf](https://github.com/theashraf)! - fix: don't reload the animation when a view scrolls out of view and back
+  
+  Leaving the window was treated as a teardown, so list recycling and screen
+  transitions destroyed the player and rebuilt it on the way back, re-reading the
+  source and restarting from frame 0. Playback now freezes at the current frame
+  and resumes on return; the player is released only on unmount.
+
 ## 0.12.0
 ### Minor Changes
 
