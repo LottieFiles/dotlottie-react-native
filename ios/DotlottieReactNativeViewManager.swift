@@ -301,9 +301,6 @@ struct AnimationView: View {
     var body: some View {
       if let animation = dataStore.animation {
                   DotLottieView(dotLottie: animation)
-                      .onDisappear {
-                          cleanupAnimation()
-                      }
               } else {
                   Text("Loading animation...")
                       .onAppear {
@@ -311,12 +308,6 @@ struct AnimationView: View {
                       }
               }
     }
-
-
-
-  func cleanupAnimation() {
-          dataStore.cleanupAnimation()
-      }
 }
 
 
@@ -499,6 +490,7 @@ class DotlottieReactNativeView: UIView {
   private var isMountedToWindow: Bool = false
   private var isReleased: Bool = false
   private var pendingAnimationUpdate: Bool = false
+  private var pausedWhileDetached: Bool = false
   let dataStore: Datastore = .init()
   var _animation: DotLottieAnimation? {
     dataStore.animation
@@ -532,11 +524,32 @@ class DotlottieReactNativeView: UIView {
 
     if currentlyMounted {
       setupHostingControllerIfNeeded()
-      scheduleAnimationUpdate()
+      if dataStore.animation == nil {
+        scheduleAnimationUpdate()
+      } else {
+        resumeAfterReattach()
+      }
     } else {
-      dataStore.cleanupAnimation()
-      tearDownHostingController()
+      pauseWhileDetached()
     }
+  }
+
+  private func pauseWhileDetached() {
+    guard !pausedWhileDetached, let animation = _animation, animation.isPlaying() else {
+      return
+    }
+
+    pausedWhileDetached = true
+    _ = animation.pause()
+  }
+
+  private func resumeAfterReattach() {
+    guard pausedWhileDetached else {
+      return
+    }
+
+    pausedWhileDetached = false
+    _ = _animation?.play()
   }
 
   override func layoutSubviews() {
@@ -552,6 +565,7 @@ class DotlottieReactNativeView: UIView {
     isReleased = true
     isMountedToWindow = false
     pendingAnimationUpdate = false
+    pausedWhileDetached = false
     dataStore.cleanupAnimation()
     tearDownHostingController()
     resetEventHandlers()
