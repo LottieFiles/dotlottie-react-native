@@ -505,9 +505,9 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     if (!frozenWhileDetached) {
       return
     }
-    frozenWhileDetached = false
     try {
       dotLottieController.unFreeze()
+      frozenWhileDetached = false
     } catch (e: Exception) {
       android.util.Log.w("DotLottie", "Failed to unfreeze re-attached animation: ${e.message}")
     }
