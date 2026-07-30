@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -53,6 +54,7 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var hasActiveComposition: Boolean = false
   private var isReleased: Boolean = false
   private var hasAttachedToWindow: Boolean = false
+  private var frozenWhileDetached: Boolean = false
 
   private val measureAndLayout =
           Runnable {
@@ -75,6 +77,11 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     lifecycleRegistry.currentState = Lifecycle.State.RESUMED
     setViewTreeLifecycleOwner(this)
     composeView.setViewTreeLifecycleOwner(this)
+    // ComposeView disposes its composition on detach by default, which would
+    // reload the animation whenever a list recycles the row back into view.
+    composeView.setViewCompositionStrategy(
+            ViewCompositionStrategy.DisposeOnLifecycleDestroyed(this)
+    )
     addView(composeView)
     ensureStateMachineListener()
     // Composition is created once the view is attached (onAttachedToWindow /
@@ -463,7 +470,7 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     super.onDetachedFromWindow()
     hasAttachedToWindow = false
     removeCallbacks(measureAndLayout)
-    cleanup()
+    freezeWhileDetached()
   }
 
   override fun onAttachedToWindow() {
@@ -476,7 +483,34 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     if (!hasActiveComposition) {
       renderContent()
     }
+    unfreezeAfterReattach()
     scheduleMeasureAndLayout()
+  }
+
+  private fun freezeWhileDetached() {
+    if (isReleased || !hasActiveComposition || frozenWhileDetached) {
+      return
+    }
+    try {
+      if (dotLottieController.isPlaying) {
+        dotLottieController.freeze()
+        frozenWhileDetached = true
+      }
+    } catch (e: Exception) {
+      android.util.Log.w("DotLottie", "Failed to freeze detached animation: ${e.message}")
+    }
+  }
+
+  private fun unfreezeAfterReattach() {
+    if (!frozenWhileDetached) {
+      return
+    }
+    frozenWhileDetached = false
+    try {
+      dotLottieController.unFreeze()
+    } catch (e: Exception) {
+      android.util.Log.w("DotLottie", "Failed to unfreeze re-attached animation: ${e.message}")
+    }
   }
 
   override fun requestLayout() {
@@ -551,6 +585,7 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     } catch (e: Exception) {
       android.util.Log.e("DotLottie", "Error during cleanup: ${e.message}")
     } finally {
+      frozenWhileDetached = false
       if (hasActiveComposition) {
         composeView.disposeComposition()
         hasActiveComposition = false
