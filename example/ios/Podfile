@@ -5,6 +5,14 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
+# dotLottie ships DotLottiePlayer as a Swift Package binary target. This helper
+# embeds the SPM-built DotLottiePlayer.framework into the app bundle so
+# command-line builds find the framework's executable. This example lives in the
+# library's monorepo, so it requires the helper by relative path. Published
+# consumers should instead use:
+#   require File.join(File.dirname(`node --print "require.resolve('@lottiefiles/dotlottie-react-native/package.json')"`), "scripts/dotlottie_embed")
+require File.expand_path("../../scripts/dotlottie_embed", __dir__)
+
 platform :ios, '15.4'
 prepare_react_native_project!
 
@@ -30,6 +38,7 @@ target 'example' do
   )
 
   post_install do |installer|
+    dotlottie_embed_frameworks!(installer)
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(
       installer,

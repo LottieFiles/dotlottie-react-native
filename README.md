@@ -35,6 +35,33 @@ To support iOS 15.4, ensure your `Podfile` specifies the platform version:
 platform :ios, '15.4'
 ```
 
+The iOS player is delivered as a Swift Package, so frameworks must be linked
+dynamically. Enable dynamic frameworks in your `Podfile`:
+
+```ruby
+use_frameworks! :linkage => :dynamic
+```
+
+`DotLottiePlayer` ships as a Swift Package binary target. Xcode embeds it
+automatically when you build from the IDE, but command-line builds
+(`react-native run-ios`, `xcodebuild`) do not — the app then fails to install
+with *"DotLottiePlayer.framework is missing its bundle executable."* To fix this,
+require our embed helper and call it from `post_install` in your `Podfile`:
+
+```ruby
+require File.join(File.dirname(`node --print "require.resolve('@lottiefiles/dotlottie-react-native/package.json')"`), "scripts/dotlottie_embed")
+
+# ... inside your target's post_install block:
+post_install do |installer|
+  dotlottie_embed_frameworks!(installer)
+  # ... your other post_install steps
+end
+```
+
+> Expo projects don't need this step — the `withDotLottie` config plugin wires it
+> into the generated `Podfile` automatically during prebuild. See [Expo
+> Configuration](#expo-configuration).
+
 After installing the package, navigate to the `ios` directory and install the pods:
 
 ```sh
@@ -64,7 +91,7 @@ module.exports = (async () => {
 
 ### Expo Configuration
 
-Expo projects must include the native binaries before this library can render animations. We ship a config plugin scaffold (`withDotLottie`) so Expo developers can prepare builds with minimal setup.
+Expo projects must include the native binaries before this library can render animations. We ship a config plugin (`withDotLottie`) so Expo developers can prepare builds with minimal setup. It sets the iOS deployment target, forces dynamic frameworks, and wires the `DotLottiePlayer` framework embed step into the generated `Podfile` automatically — so the manual `Podfile` step from [Pod Installation (iOS)](#pod-installation-ios) is **not** required for Expo apps.
 
 1. **Add the plugin** – the package already declares it under the `expo.plugins` field, so it is applied automatically. To customize behaviour, you can reference it explicitly in `app.json`:
 

@@ -18,7 +18,8 @@
       }
     },
     "./plugin": "./plugins/withDotLottie.js",
-    "./plugins/withDotLottie": "./plugins/withDotLottie.js"
+    "./plugins/withDotLottie": "./plugins/withDotLottie.js",
+    "./package.json": "./package.json"
   },
   "files": [
     "src",
@@ -26,6 +27,7 @@
     "android",
     "ios",
     "plugins",
+    "scripts",
     "cpp",
     "*.podspec",
     "!ios/build",
