@@ -159,7 +159,8 @@ import SwiftUI
 
      if !externalAssets.isEmpty {
        let assets = externalAssets
-       config.assetResolver = { src in assets[src] }
+       // The core reports a relative asset path with a leading slash.
+       config.assetResolver = { src in assets[src] ?? (src.hasPrefix("/") ? assets[String(src.dropFirst())] : nil) }
      }
 
      return config

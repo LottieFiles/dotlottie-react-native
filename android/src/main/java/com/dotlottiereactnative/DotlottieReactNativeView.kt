@@ -55,7 +55,8 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   // Read by the player while it loads or renders, possibly off the UI thread.
   @Volatile private var externalAssets: Map<String, ByteArray> = emptyMap()
   private val externalAssetsVersion = mutableIntStateOf(0)
-  private val assetResolver = AssetResolver { src -> externalAssets[src] }
+  // The core reports a relative asset path with a leading slash.
+  private val assetResolver = AssetResolver { src -> externalAssets[src] ?: externalAssets[src.removePrefix("/")] }
   var dotLottieController: DotLottieController = DotLottieController()
   private val eventListeners: List<DotLottieEventListener> = createEventListeners()
   private val stateMachineEventListener: StateMachineEventListener = createStateMachineEventListener()

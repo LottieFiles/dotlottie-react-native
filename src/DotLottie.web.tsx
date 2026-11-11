@@ -671,7 +671,8 @@ export const DotLottie = forwardRef(
       if (!assets) return undefined;
       const cache = new Map<string, Uint8Array | undefined>();
       return (assetSrc: string) => {
-        const encoded = assets[assetSrc];
+        // The core reports a relative asset path with a leading slash.
+        const encoded = assets[assetSrc] ?? assets[assetSrc.replace(/^\//, '')];
         if (encoded === undefined) return undefined;
         if (!cache.has(assetSrc)) {
           cache.set(assetSrc, decodeBase64(encoded));
