@@ -19,4 +19,4 @@ Fixes:
 - Android: `unfreeze()` did nothing.
 - Web: the ref now has `stateMachineLoad`, `setTheme`, `stateMachineFire` and the `stateMachineSet*Input` methods, like on native (`loadStateMachine` and `loadTheme` are removed). The `onStateMachine*` event props now work on web.
 
-Native players: dotlottie-android `0.15.0` → `0.18.0`, dotlottie-ios `0.16.6` → `0.17.0`, `@lottiefiles/dotlottie-react` `^0.19.4` → `^0.21.2`.
+Native players: dotlottie-android `0.15.0` → `0.18.0`, dotlottie-ios `0.16.6` → `0.17.0`, `@lottiefiles/dotlottie-react` `^0.19.4` → `^0.22.0`.

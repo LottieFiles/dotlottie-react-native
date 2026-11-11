@@ -201,6 +201,6 @@
     "version": "0.40.0"
   },
   "dependencies": {
-    "@lottiefiles/dotlottie-react": "^0.21.2"
+    "@lottiefiles/dotlottie-react": "^0.22.0"
   }
 }
