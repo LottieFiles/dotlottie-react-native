@@ -35,6 +35,7 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var reactContext: ReactContext = context.reactApplicationContext
   private var animationUrl = mutableStateOf<String?>(null)
   private var loop: Boolean = false
+  private var loopCount: UInt = 0u
   private var autoplay: Boolean = true
   private var speed: Float = 1f
   private var useFrameInterpolation: Boolean = false
@@ -166,7 +167,8 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
                 marker = marker,
                 segment = segment,
                 playMode = playMode,
-                eventListeners = eventListeners
+                eventListeners = eventListeners,
+                loopCount = loopCount
         )
       } else {
         DotLottieAnimation(
@@ -181,7 +183,8 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
                 marker = marker,
                 segment = segment,
                 playMode = playMode,
-                eventListeners = eventListeners
+                eventListeners = eventListeners,
+                loopCount = loopCount
         )
       }
     }
@@ -241,6 +244,11 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   fun setLoop(value: Boolean) {
     loop = value
     dotLottieController.setLoop(value)
+  }
+
+  fun setLoopCount(value: Int) {
+    loopCount = value.coerceAtLeast(0).toUInt()
+    dotLottieController.setLoopCount(loopCount)
   }
 
   fun setAutoPlay(value: Boolean) {

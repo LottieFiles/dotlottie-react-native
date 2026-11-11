@@ -1,5 +1,7 @@
 package com.dotlottiereactnative
 
+import android.graphics.Color
+import android.graphics.PointF
 import com.dotlottie.dlplayer.Mode
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReadableMap
@@ -7,6 +9,7 @@ import com.facebook.react.common.annotations.internal.InteropLegacyArchitecture
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
+import kotlin.math.roundToInt
 
 @InteropLegacyArchitecture
 class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeView>() {
@@ -42,6 +45,25 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
             COMMAND_SET_MARKER to COMMAND_SET_MARKER_ID,
             COMMAND_SET_THEME to COMMAND_SET_THEME_ID,
             COMMAND_LOAD_ANIMATION to COMMAND_LOAD_ANIMATION_ID,
+            COMMAND_SET_LOOP_COUNT to COMMAND_SET_LOOP_COUNT_ID,
+            COMMAND_SET_AUDIO_VOLUME to COMMAND_SET_AUDIO_VOLUME_ID,
+            COMMAND_SET_THEME_DATA to COMMAND_SET_THEME_DATA_ID,
+            COMMAND_RESET_THEME to COMMAND_RESET_THEME_ID,
+            COMMAND_STATE_MACHINE_LOAD_DATA to COMMAND_STATE_MACHINE_LOAD_DATA_ID,
+            COMMAND_STATE_MACHINE_SET_SEED to COMMAND_STATE_MACHINE_SET_SEED_ID,
+            COMMAND_SET_SLOTS to COMMAND_SET_SLOTS_ID,
+            COMMAND_SET_SLOT to COMMAND_SET_SLOT_ID,
+            COMMAND_SET_COLOR_SLOT to COMMAND_SET_COLOR_SLOT_ID,
+            COMMAND_SET_SCALAR_SLOT to COMMAND_SET_SCALAR_SLOT_ID,
+            COMMAND_SET_TEXT_SLOT to COMMAND_SET_TEXT_SLOT_ID,
+            COMMAND_SET_VECTOR_SLOT to COMMAND_SET_VECTOR_SLOT_ID,
+            COMMAND_SET_POSITION_SLOT to COMMAND_SET_POSITION_SLOT_ID,
+            COMMAND_SET_IMAGE_SLOT to COMMAND_SET_IMAGE_SLOT_ID,
+            COMMAND_SET_BEZIER_PATH_SLOT to COMMAND_SET_BEZIER_PATH_SLOT_ID,
+            COMMAND_CLEAR_SLOT to COMMAND_CLEAR_SLOT_ID,
+            COMMAND_CLEAR_SLOTS to COMMAND_CLEAR_SLOTS_ID,
+            COMMAND_RESET_SLOT to COMMAND_RESET_SLOT_ID,
+            COMMAND_RESET_SLOTS to COMMAND_RESET_SLOTS_ID,
     )
   }
 
@@ -176,6 +198,131 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
       val animationId = args?.getString(0) ?: ""
       view.dotLottieController.loadAnimation(animationId)
     }
+
+    if (commandId == COMMAND_SET_USE_FRAME_INTERPOLATION_ID) {
+      val value = args?.getBoolean(0) ?: false
+      view.dotLottieController.setUseFrameInterpolation(value)
+    }
+
+    if (commandId == COMMAND_SET_LOOP_COUNT_ID) {
+      val count = args?.getInt(0) ?: 0
+      view.setLoopCount(count)
+    }
+
+    if (commandId == COMMAND_SET_AUDIO_VOLUME_ID) {
+      val volume = args?.getDouble(0)?.toFloat() ?: 1f
+      view.dotLottieController.setAudioVolume(volume)
+    }
+
+    if (commandId == COMMAND_SET_THEME_DATA_ID) {
+      val themeData = args?.getString(0) ?: ""
+      view.dotLottieController.setThemeData(themeData)
+    }
+
+    if (commandId == COMMAND_RESET_THEME_ID) {
+      view.dotLottieController.resetTheme()
+    }
+
+    if (commandId == COMMAND_STATE_MACHINE_LOAD_DATA_ID) {
+      val data = args?.getString(0) ?: ""
+      view.dotLottieController.stateMachineLoadData(data)
+    }
+
+    if (commandId == COMMAND_STATE_MACHINE_SET_SEED_ID) {
+      val seed = args?.getDouble(0)?.toLong() ?: 0L
+      view.dotLottieController.stateMachineSetSeed(seed)
+    }
+
+    if (commandId == COMMAND_SET_SLOTS_ID) {
+      val slots = args?.getString(0) ?: ""
+      view.dotLottieController.setSlots(slots)
+    }
+
+    if (commandId == COMMAND_SET_SLOT_ID) {
+      val slotId = args?.getString(0) ?: ""
+      val json = args?.getString(1) ?: ""
+      view.dotLottieController.setSlot(slotId, json)
+    }
+
+    if (commandId == COMMAND_SET_COLOR_SLOT_ID) {
+      val slotId = args?.getString(0) ?: ""
+      val color = args?.getArray(1)
+      if (color != null && color.size() >= 3) {
+        val channel = { index: Int -> (color.getDouble(index) * 255).roundToInt().coerceIn(0, 255) }
+        view.dotLottieController.setColorSlot(slotId, Color.rgb(channel(0), channel(1), channel(2)))
+      }
+    }
+
+    if (commandId == COMMAND_SET_SCALAR_SLOT_ID) {
+      val slotId = args?.getString(0) ?: ""
+      val value = args?.getDouble(1)?.toFloat() ?: 0f
+      view.dotLottieController.setScalarSlot(slotId, value)
+    }
+
+    if (commandId == COMMAND_SET_TEXT_SLOT_ID) {
+      val slotId = args?.getString(0) ?: ""
+      val text = args?.getString(1) ?: ""
+      view.dotLottieController.setTextSlot(slotId, text)
+    }
+
+    if (commandId == COMMAND_SET_VECTOR_SLOT_ID) {
+      val slotId = args?.getString(0) ?: ""
+      toPointF(args?.getArray(1))?.let { view.dotLottieController.setVectorSlot(slotId, it) }
+    }
+
+    if (commandId == COMMAND_SET_POSITION_SLOT_ID) {
+      val slotId = args?.getString(0) ?: ""
+      toPointF(args?.getArray(1))?.let { view.dotLottieController.setPositionSlot(slotId, it) }
+    }
+
+    if (commandId == COMMAND_SET_IMAGE_SLOT_ID) {
+      val slotId = args?.getString(0) ?: ""
+      val src = args?.getString(1) ?: ""
+      view.dotLottieController.setImageSlotSrc(slotId, src)
+    }
+
+    if (commandId == COMMAND_SET_BEZIER_PATH_SLOT_ID) {
+      val slotId = args?.getString(0) ?: ""
+      val path = args?.getMap(1)
+      val vertices = toPointFList(path?.getArray("vertices"))
+      if (path != null && vertices != null) {
+        view.dotLottieController.setBezierPathSlot(
+                slotId,
+                vertices,
+                path.hasKey("closed") && path.getBoolean("closed"),
+                if (path.hasKey("inTangents")) toPointFList(path.getArray("inTangents")) else null,
+                if (path.hasKey("outTangents")) toPointFList(path.getArray("outTangents")) else null
+        )
+      }
+    }
+
+    if (commandId == COMMAND_CLEAR_SLOT_ID) {
+      val slotId = args?.getString(0) ?: ""
+      view.dotLottieController.clearSlot(slotId)
+    }
+
+    if (commandId == COMMAND_CLEAR_SLOTS_ID) {
+      view.dotLottieController.clearSlots()
+    }
+
+    if (commandId == COMMAND_RESET_SLOT_ID) {
+      val slotId = args?.getString(0) ?: ""
+      view.dotLottieController.resetSlot(slotId)
+    }
+
+    if (commandId == COMMAND_RESET_SLOTS_ID) {
+      view.dotLottieController.resetSlots()
+    }
+  }
+
+  private fun toPointF(array: ReadableArray?): PointF? {
+    if (array == null || array.size() < 2) return null
+    return PointF(array.getDouble(0).toFloat(), array.getDouble(1).toFloat())
+  }
+
+  private fun toPointFList(array: ReadableArray?): List<PointF>? {
+    if (array == null) return null
+    return (0 until array.size()).mapNotNull { toPointF(array.getArray(it)) }
   }
 
   @ReactProp(name = "source")
@@ -186,6 +333,11 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
   @ReactProp(name = "loop")
   fun setLoop(view: DotlottieReactNativeView, value: Boolean) {
     view.setLoop(value)
+  }
+
+  @ReactProp(name = "loopCount")
+  fun setLoopCount(view: DotlottieReactNativeView, value: Int) {
+    view.setLoopCount(value)
   }
 
   @ReactProp(name = "autoplay")
@@ -268,7 +420,7 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
     private const val COMMAND_FREEZE = "freeze"
     private const val COMMAND_FREEZE_ID = 5
 
-    private const val COMMAND_UNFREEZE = "unFreeze"
+    private const val COMMAND_UNFREEZE = "unfreeze"
     private const val COMMAND_UNFREEZE_ID = 6
 
     private const val COMMAND_SET_LOOP = "setLoop"
@@ -324,5 +476,62 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
 
     private const val COMMAND_LOAD_ANIMATION = "loadAnimation"
     private const val COMMAND_LOAD_ANIMATION_ID = 25
+
+    private const val COMMAND_SET_LOOP_COUNT = "setLoopCount"
+    private const val COMMAND_SET_LOOP_COUNT_ID = 26
+
+    private const val COMMAND_SET_AUDIO_VOLUME = "setAudioVolume"
+    private const val COMMAND_SET_AUDIO_VOLUME_ID = 27
+
+    private const val COMMAND_SET_THEME_DATA = "setThemeData"
+    private const val COMMAND_SET_THEME_DATA_ID = 28
+
+    private const val COMMAND_RESET_THEME = "resetTheme"
+    private const val COMMAND_RESET_THEME_ID = 29
+
+    private const val COMMAND_STATE_MACHINE_LOAD_DATA = "stateMachineLoadData"
+    private const val COMMAND_STATE_MACHINE_LOAD_DATA_ID = 30
+
+    private const val COMMAND_STATE_MACHINE_SET_SEED = "stateMachineSetSeed"
+    private const val COMMAND_STATE_MACHINE_SET_SEED_ID = 31
+
+    private const val COMMAND_SET_SLOTS = "setSlots"
+    private const val COMMAND_SET_SLOTS_ID = 32
+
+    private const val COMMAND_SET_SLOT = "setSlot"
+    private const val COMMAND_SET_SLOT_ID = 33
+
+    private const val COMMAND_SET_COLOR_SLOT = "setColorSlot"
+    private const val COMMAND_SET_COLOR_SLOT_ID = 34
+
+    private const val COMMAND_SET_SCALAR_SLOT = "setScalarSlot"
+    private const val COMMAND_SET_SCALAR_SLOT_ID = 35
+
+    private const val COMMAND_SET_TEXT_SLOT = "setTextSlot"
+    private const val COMMAND_SET_TEXT_SLOT_ID = 36
+
+    private const val COMMAND_SET_VECTOR_SLOT = "setVectorSlot"
+    private const val COMMAND_SET_VECTOR_SLOT_ID = 37
+
+    private const val COMMAND_SET_POSITION_SLOT = "setPositionSlot"
+    private const val COMMAND_SET_POSITION_SLOT_ID = 38
+
+    private const val COMMAND_SET_IMAGE_SLOT = "setImageSlot"
+    private const val COMMAND_SET_IMAGE_SLOT_ID = 39
+
+    private const val COMMAND_SET_BEZIER_PATH_SLOT = "setBezierPathSlot"
+    private const val COMMAND_SET_BEZIER_PATH_SLOT_ID = 40
+
+    private const val COMMAND_CLEAR_SLOT = "clearSlot"
+    private const val COMMAND_CLEAR_SLOT_ID = 41
+
+    private const val COMMAND_CLEAR_SLOTS = "clearSlots"
+    private const val COMMAND_CLEAR_SLOTS_ID = 42
+
+    private const val COMMAND_RESET_SLOT = "resetSlot"
+    private const val COMMAND_RESET_SLOT_ID = 43
+
+    private const val COMMAND_RESET_SLOTS = "resetSlots"
+    private const val COMMAND_RESET_SLOTS_ID = 44
   }
 }

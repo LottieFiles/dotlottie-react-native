@@ -1,5 +1,6 @@
 package com.dotlottiereactnative
 
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
@@ -93,6 +94,175 @@ class DotlottieReactNativeModule(private val reactContext: ReactApplicationConte
   fun getLoopCount(viewTag: Int, promise: Promise) {
     withDotlottieView(viewTag, promise) { view ->
       promise.resolve(view.getLoopCount())
+    }
+  }
+
+  @ReactMethod
+  fun getAudioVolume(viewTag: Int, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      promise.resolve(view.dotLottieController.audioVolume.toDouble())
+    }
+  }
+
+  @ReactMethod
+  fun getMarkers(viewTag: Int, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      val markers = Arguments.createArray()
+      view.dotLottieController.markers.forEach { marker ->
+        markers.pushMap(
+                Arguments.createMap().apply {
+                  putString("name", marker.name)
+                  putDouble("time", marker.start.toDouble())
+                  putDouble("duration", (marker.end - marker.start).toDouble())
+                }
+        )
+      }
+      promise.resolve(markers)
+    }
+  }
+
+  @ReactMethod
+  fun getManifest(viewTag: Int, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      // The player returns a manifest without animations when the source is not a .lottie file.
+      val manifest = view.dotLottieController.manifest()?.takeIf { it.animations.isNotEmpty() }
+      if (manifest == null) {
+        promise.resolve(null)
+        return@withDotlottieView
+      }
+
+      val animations = Arguments.createArray()
+      manifest.animations.forEach { animation ->
+        animations.pushMap(
+                Arguments.createMap().apply {
+                  putString("id", animation.id)
+                  animation.name?.let { putString("name", it) }
+                  animation.initialTheme?.let { putString("initialTheme", it) }
+                  animation.background?.let { putString("background", it) }
+                  animation.themes?.let { themes ->
+                    putArray("themes", Arguments.createArray().apply { themes.forEach { pushString(it) } })
+                  }
+                }
+        )
+      }
+
+      val result = Arguments.createMap().apply {
+        manifest.generator?.let { putString("generator", it) }
+        manifest.version?.let { putString("version", it) }
+        putArray("animations", animations)
+        manifest.themes?.let { themes ->
+          putArray(
+                  "themes",
+                  Arguments.createArray().apply {
+                    themes.forEach { theme ->
+                      pushMap(
+                              Arguments.createMap().apply {
+                                putString("id", theme.id)
+                                theme.name?.let { putString("name", it) }
+                              }
+                      )
+                    }
+                  }
+          )
+        }
+        manifest.stateMachines?.let { stateMachines ->
+          putArray(
+                  "stateMachines",
+                  Arguments.createArray().apply {
+                    stateMachines.forEach { stateMachine ->
+                      pushMap(
+                              Arguments.createMap().apply {
+                                putString("id", stateMachine.id)
+                                stateMachine.name?.let { putString("name", it) }
+                              }
+                      )
+                    }
+                  }
+          )
+        }
+        manifest.initial?.let { initial ->
+          putMap(
+                  "initial",
+                  Arguments.createMap().apply {
+                    initial.animation?.let { putString("animation", it) }
+                    initial.stateMachine?.let { putString("stateMachine", it) }
+                  }
+          )
+        }
+      }
+      promise.resolve(result)
+    }
+  }
+
+  @ReactMethod
+  fun getSlotIds(viewTag: Int, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      val slotIds = Arguments.createArray()
+      view.dotLottieController.getSlotIds().forEach { slotIds.pushString(it) }
+      promise.resolve(slotIds)
+    }
+  }
+
+  @ReactMethod
+  fun getSlotType(viewTag: Int, slotId: String, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      promise.resolve(view.dotLottieController.getSlotType(slotId))
+    }
+  }
+
+  @ReactMethod
+  fun getSlot(viewTag: Int, slotId: String, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      promise.resolve(view.dotLottieController.getSlot(slotId))
+    }
+  }
+
+  @ReactMethod
+  fun getSlots(viewTag: Int, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      promise.resolve(view.dotLottieController.getSlots())
+    }
+  }
+
+  @ReactMethod
+  fun stateMachineGetNumericInput(viewTag: Int, key: String, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      promise.resolve(view.dotLottieController.stateMachineGetNumericInput(key)?.toDouble())
+    }
+  }
+
+  @ReactMethod
+  fun stateMachineGetStringInput(viewTag: Int, key: String, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      promise.resolve(view.dotLottieController.stateMachineGetStringInput(key))
+    }
+  }
+
+  @ReactMethod
+  fun stateMachineGetBooleanInput(viewTag: Int, key: String, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      promise.resolve(view.dotLottieController.stateMachineGetBooleanInput(key))
+    }
+  }
+
+  @ReactMethod
+  fun stateMachineCurrentState(viewTag: Int, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      promise.resolve(view.dotLottieController.stateMachineCurrentState() ?: "")
+    }
+  }
+
+  @ReactMethod
+  fun stateMachineStatus(viewTag: Int, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      promise.resolve(view.dotLottieController.stateMachineStatus() ?: "")
+    }
+  }
+
+  @ReactMethod
+  fun getStateMachine(viewTag: Int, stateMachineId: String, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      promise.resolve(view.dotLottieController.getStateMachine(stateMachineId))
     }
   }
 
