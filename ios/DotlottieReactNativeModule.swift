@@ -145,6 +145,228 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     }
   }
 
+  @objc(getAudioVolume:resolver:rejecter:)
+  func getAudioVolume(
+    _ node: NSNumber,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let volume = Double(view._animation?.audioVolume() ?? 1)
+      resolve(volume)
+    }
+  }
+
+  @objc(getMarkers:resolver:rejecter:)
+  func getMarkers(
+    _ node: NSNumber,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let markers = (view._animation?.markers() ?? []).map { marker -> [String: Any] in
+        [
+          "name": marker.name,
+          "time": Double(marker.time),
+          "duration": Double(marker.duration)
+        ]
+      }
+      resolve(markers)
+    }
+  }
+
+  @objc(getManifest:resolver:rejecter:)
+  func getManifest(
+    _ node: NSNumber,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      guard let manifest = view._animation?.manifest() else {
+        resolve(nil)
+        return
+      }
+
+      var result: [String: Any] = [
+        "animations": manifest.animations.map { animation -> [String: Any] in
+          let values: [String: Any?] = [
+            "id": animation.id,
+            "name": animation.name,
+            "initialTheme": animation.initialTheme,
+            "background": animation.background,
+            "themes": animation.themes
+          ]
+          return values.compactMapValues { $0 }
+        }
+      ]
+      if let generator = manifest.generator {
+        result["generator"] = generator
+      }
+      if let version = manifest.version {
+        result["version"] = version
+      }
+      if let themes = manifest.themes {
+        result["themes"] = themes.map { theme -> [String: Any] in
+          let values: [String: Any?] = ["id": theme.id, "name": theme.name]
+          return values.compactMapValues { $0 }
+        }
+      }
+      if let stateMachines = manifest.stateMachines {
+        result["stateMachines"] = stateMachines.map { stateMachine -> [String: Any] in
+          let values: [String: Any?] = ["id": stateMachine.id, "name": stateMachine.name]
+          return values.compactMapValues { $0 }
+        }
+      }
+      if let initial = manifest.initial {
+        let values: [String: Any?] = [
+          "animation": initial.animation,
+          "stateMachine": initial.stateMachine
+        ]
+        result["initial"] = values.compactMapValues { $0 }
+      }
+      resolve(result)
+    }
+  }
+
+  @objc(getSlotIds:resolver:rejecter:)
+  func getSlotIds(
+    _ node: NSNumber,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let slotIds = view._animation?.getSlotIds() ?? []
+      resolve(slotIds)
+    }
+  }
+
+  @objc(getSlotType:slotId:resolver:rejecter:)
+  func getSlotType(
+    _ node: NSNumber,
+    slotId: String,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let slotType = view._animation?.getSlotType(slotId: slotId)
+      resolve(slotType)
+    }
+  }
+
+  @objc(getSlot:slotId:resolver:rejecter:)
+  func getSlot(
+    _ node: NSNumber,
+    slotId: String,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let slot = view._animation?.getSlot(slotId: slotId)
+      resolve(slot)
+    }
+  }
+
+  @objc(getSlots:resolver:rejecter:)
+  func getSlots(
+    _ node: NSNumber,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let slots = view._animation?.getSlots() ?? "{}"
+      resolve(slots)
+    }
+  }
+
+  @objc(stateMachineGetNumericInput:key:resolver:rejecter:)
+  func stateMachineGetNumericInput(
+    _ node: NSNumber,
+    key: String,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let value = view._animation.map { Double($0.stateMachineGetNumericInput(key: key)) }
+      resolve(value)
+    }
+  }
+
+  @objc(stateMachineGetStringInput:key:resolver:rejecter:)
+  func stateMachineGetStringInput(
+    _ node: NSNumber,
+    key: String,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let value = view._animation?.stateMachineGetStringInput(key: key)
+      resolve(value)
+    }
+  }
+
+  @objc(stateMachineGetBooleanInput:key:resolver:rejecter:)
+  func stateMachineGetBooleanInput(
+    _ node: NSNumber,
+    key: String,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let value = view._animation?.stateMachineGetBooleanInput(key: key)
+      resolve(value)
+    }
+  }
+
+  @objc(stateMachineCurrentState:resolver:rejecter:)
+  func stateMachineCurrentState(
+    _ node: NSNumber,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let state = view._animation?.stateMachineCurrentState() ?? ""
+      resolve(state)
+    }
+  }
+
+  @objc(stateMachineStatus:resolver:rejecter:)
+  func stateMachineStatus(
+    _ node: NSNumber,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let status = view._animation?.stateMachineStatus() ?? ""
+      resolve(status)
+    }
+  }
+
+  @objc(getStateMachine:stateMachineId:resolver:rejecter:)
+  func getStateMachine(
+    _ node: NSNumber,
+    stateMachineId: String,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      let definition = view._animation?.getStateMachine(stateMachineId) ?? ""
+      resolve(definition.isEmpty ? nil : definition)
+    }
+  }
+
+  @objc(stateMachineGetInputs:resolver:rejecter:)
+  func stateMachineGetInputs(
+    _ node: NSNumber,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      // Names starting with "@" are built-in inputs such as "@elapsedTime".
+      let inputs = (view._animation?.stateMachineGetInputs() ?? [:]).filter { !$0.key.hasPrefix("@") }
+      resolve(inputs)
+    }
+  }
+
   private func withDotlottieView(
     _ node: NSNumber,
     rejecter reject: @escaping RCTPromiseRejectBlock,

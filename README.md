@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
 | `source`                | `string \| { uri: string }` | **Required**  | Specifies the animation file to be loaded (local or remote URL).       |
 | `style`                 | `ViewStyle`                 | `undefined`   | Custom styles for the animation container.                             |
 | `loop`                  | `boolean`                   | `false`       | Determines if the animation should loop continuously.                  |
+| `loopCount`             | `number`                    | `0`           | How many times to loop when `loop` is `true`. `0` loops forever.       |
 | `autoplay`              | `boolean`                   | `false`       | Determines if the animation should start playing automatically.        |
 | `speed`                 | `number`                    | `1.0`         | The playback speed of the animation (e.g., 0.5, 1, 2).                 |
 | `playMode`              | `Mode`                      | `FORWARD`     | The play mode: `FORWARD`, `REVERSE`, `BOUNCE`, `REVERSE_BOUNCE`.       |
@@ -202,6 +203,7 @@ const styles = StyleSheet.create({
 | `themeId`               | `string`                    | `undefined`   | The theme ID to apply to the animation.                                |
 | `stateMachineId`        | `string`                    | `undefined`   | The ID of the state machine to load and start automatically.           |
 | `layout`                | `{ fit?: Fit; align?: [number, number] }` | `undefined`   | Controls how the animation fits its container. `fit`: `contain` (default), `cover`, `fill`, `fit-width`, `fit-height`, `none`. `align`: crop anchor, each `0..1`, default `[0.5, 0.5]`. |
+| `externalAssets`        | `Record<string, string>`    | `undefined`   | Assets the animation references but does not embed. Maps each asset `src`, exactly as written in the animation, to its bytes as base64 (or a `data:` URI). Changing it reloads the animation. Ignored by the `gl` renderer on Android. |
 
 **Example — fill the container and crop the overflow:**
 
@@ -245,6 +247,60 @@ ref.current?.play();
 | `stateMachineSetNumericInput(key: string, value: number)`  | Sets a numeric input value in the state machine. |
 | `stateMachineSetStringInput(key: string, value: string)`   | Sets a string input value in the state machine.  |
 | `stateMachineSetBooleanInput(key: string, value: boolean)` | Sets a boolean input value in the state machine. |
+| `stateMachineLoadData(data: string)`                       | Loads a state machine from its JSON definition.  |
+| `stateMachineSetSeed(seed: number)`                        | Seeds the state machine's random transitions.    |
+| `stateMachineOverrideState(state: string, immediate?: boolean)` | Moves the state machine to the given state. |
+| `stateMachineResetInput(key: string)`                      | Resets an input to its initial value.            |
+| `setLoopCount(count: number)`                              | Sets how many times to loop (`0` = forever).     |
+| `setUseFrameInterpolation(value: boolean)`                 | Turns frame interpolation on or off.             |
+| `setAudioVolume(volume: number)`                           | Sets the audio volume, from `0` to `1`.          |
+| `setThemeData(themeData: string)`                          | Applies a theme from its JSON data.              |
+| `resetTheme()`                                             | Removes the active theme.                        |
+
+These methods return a `Promise`:
+
+| Method                                     | Returns                         | Description                                                     |
+| ------------------------------------------ | ------------------------------- | --------------------------------------------------------------- |
+| `audioVolume()`                            | `Promise<number>`               | Current audio volume.                                           |
+| `markers()`                                | `Promise<Marker[]>`             | Markers as `{ name, time, duration }`, in frames.               |
+| `manifest()`                               | `Promise<object \| undefined>`  | The `.lottie` manifest, or `undefined` for a plain Lottie JSON. |
+| `stateMachineGetNumericInput(key: string)` | `Promise<number \| undefined>`  | Value of a numeric state machine input.                         |
+| `stateMachineGetStringInput(key: string)`  | `Promise<string \| undefined>`  | Value of a string state machine input.                          |
+| `stateMachineGetBooleanInput(key: string)` | `Promise<boolean \| undefined>` | Value of a boolean state machine input.                         |
+| `stateMachineCurrentState()`               | `Promise<string>`               | Name of the current state.                                      |
+| `stateMachineStatus()`                     | `Promise<string>`               | State machine status, e.g. `Running` or `Stopped`.              |
+| `getStateMachine(stateMachineId: string)`  | `Promise<string \| undefined>`  | JSON definition of a state machine in the loaded `.lottie`.     |
+| `stateMachineGetInputs()`                  | `Promise<Record<string, string>>` | State machine inputs as name → type (`Numeric`, `Boolean`, `String`, `Event`). |
+
+> On Android and iOS the state machine input getters return the type's default (`0`, `''`, `false`) when the input does not exist.
+
+### Slots
+
+Slots let you change colors, text, images and other values of an animation at runtime.
+
+| Method                                                          | Description                                                             |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `setSlots(slots: string)`                                       | Sets several slots from a JSON string keyed by slot ID.                 |
+| `setSlot(slotId: string, json: string)`                         | Sets one slot from its Lottie JSON value, e.g. `{"a":0,"k":[1,0,0,1]}`. |
+| `setColorSlot(slotId: string, color: [number, number, number])` | Sets a color slot. Each channel is `0..1`.                              |
+| `setScalarSlot(slotId: string, value: number)`                  | Sets a scalar slot (opacity, rotation, ...).                            |
+| `setTextSlot(slotId: string, text: string)`                     | Sets the text of a text slot.                                           |
+| `setVectorSlot(slotId: string, vector: [number, number])`       | Sets a vector slot.                                                     |
+| `setPositionSlot(slotId: string, position: [number, number])`   | Sets a position slot.                                                   |
+| `setImageSlot(slotId: string, src: string)`                     | Sets an image slot from a data URI, URL or file name in the `.lottie`.  |
+| `setBezierPathSlot(slotId: string, path: BezierPath)`           | Sets a path slot: `{ vertices, closed?, inTangents?, outTangents? }`.   |
+| `clearSlot(slotId: string)` / `clearSlots()`                    | Removes the custom value of one slot / all slots.                       |
+| `resetSlot(slotId: string)` / `resetSlots()`                    | Restores one slot / all slots to the value from the animation.          |
+| `getSlotIds()`                                                  | Returns `Promise<string[]>` with the slot IDs.                          |
+| `getSlotType(slotId: string)`                                   | Returns `Promise<string \| undefined>`, e.g. `color` or `scalar`.       |
+| `getSlot(slotId: string)`                                       | Returns `Promise<string \| undefined>` with the slot value as JSON.     |
+| `getSlots()`                                                    | Returns `Promise<string>` with all slot values as JSON.                 |
+
+```tsx
+ref.current?.setColorSlot('background', [1, 0, 0]);
+ref.current?.setTextSlot('title', 'Hello');
+const ids = await ref.current?.getSlotIds();
+```
 
 ### Events
 

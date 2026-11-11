@@ -2,8 +2,11 @@ package com.dotlottiereactnative
 
 import android.graphics.Color
 import android.net.Uri
+import android.util.Base64
 import android.widget.FrameLayout
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
@@ -12,6 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.setViewTreeLifecycleOwner
+import com.dotlottie.dlplayer.AssetResolver
 import com.dotlottie.dlplayer.Fit
 import com.dotlottie.dlplayer.Mode
 import com.facebook.react.bridge.Arguments
@@ -35,6 +39,7 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var reactContext: ReactContext = context.reactApplicationContext
   private var animationUrl = mutableStateOf<String?>(null)
   private var loop: Boolean = false
+  private var loopCount: UInt = 0u
   private var autoplay: Boolean = true
   private var speed: Float = 1f
   private var useFrameInterpolation: Boolean = false
@@ -47,6 +52,11 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
   private var layoutAlign: Pair<Float, Float> = Pair(0.5f, 0.5f)
   private var useOpenGLRenderer: Boolean = false
   private var rendererLocked: Boolean = false
+  // Read by the player while it loads or renders, possibly off the UI thread.
+  @Volatile private var externalAssets: Map<String, ByteArray> = emptyMap()
+  private val externalAssetsVersion = mutableIntStateOf(0)
+  // The core reports a relative asset path with a leading slash.
+  private val assetResolver = AssetResolver { src -> externalAssets[src] ?: externalAssets[src.removePrefix("/")] }
   var dotLottieController: DotLottieController = DotLottieController()
   private val eventListeners: List<DotLottieEventListener> = createEventListeners()
   private val stateMachineEventListener: StateMachineEventListener = createStateMachineEventListener()
@@ -166,23 +176,30 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
                 marker = marker,
                 segment = segment,
                 playMode = playMode,
-                eventListeners = eventListeners
+                eventListeners = eventListeners,
+                loopCount = loopCount
         )
       } else {
-        DotLottieAnimation(
-                source = source,
-                autoplay = autoplay,
-                loop = loop,
-                speed = speed,
-                controller = dotLottieController,
-                useFrameInterpolation = useFrameInterpolation,
-                themeId = themeId,
-                stateMachineId = stateMachineId,
-                marker = marker,
-                segment = segment,
-                playMode = playMode,
-                eventListeners = eventListeners
-        )
+        // The player takes its asset resolver once, when it is created, and uses it
+        // on load. A new key recreates the player so changed assets are loaded.
+        key(externalAssetsVersion.intValue) {
+          DotLottieAnimation(
+                  source = source,
+                  autoplay = autoplay,
+                  loop = loop,
+                  speed = speed,
+                  controller = dotLottieController,
+                  useFrameInterpolation = useFrameInterpolation,
+                  themeId = themeId,
+                  stateMachineId = stateMachineId,
+                  marker = marker,
+                  segment = segment,
+                  playMode = playMode,
+                  eventListeners = eventListeners,
+                  loopCount = loopCount,
+                  assetResolver = assetResolver
+          )
+        }
       }
     }
   }
@@ -238,9 +255,34 @@ class DotlottieReactNativeView(context: ThemedReactContext) : FrameLayout(contex
     }
   }
 
+  fun setExternalAssets(value: ReadableMap?) {
+    val assets = mutableMapOf<String, ByteArray>()
+    value?.toHashMap()?.forEach { (src, encoded) ->
+      if (encoded is String) {
+        decodeBase64(encoded)?.let { assets[src] = it }
+      }
+    }
+    externalAssets = assets
+    externalAssetsVersion.intValue++
+  }
+
+  private fun decodeBase64(value: String): ByteArray? {
+    val base64 = if (value.startsWith("data:")) value.substringAfter(',') else value
+    return try {
+      Base64.decode(base64, Base64.DEFAULT)
+    } catch (e: IllegalArgumentException) {
+      null
+    }
+  }
+
   fun setLoop(value: Boolean) {
     loop = value
     dotLottieController.setLoop(value)
+  }
+
+  fun setLoopCount(value: Int) {
+    loopCount = value.coerceAtLeast(0).toUInt()
+    dotLottieController.setLoopCount(loopCount)
   }
 
   fun setAutoPlay(value: Boolean) {

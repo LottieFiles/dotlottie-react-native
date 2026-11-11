@@ -5,6 +5,7 @@ import SwiftUI
  class Datastore: ObservableObject {
    @Published var source: NSString = ""
   @Published var loop: Bool = false
+  @Published var loopCount: Int = 0
   @Published var autoplay: Bool = true
   @Published var speed: Double = 1
   @Published var useFrameInterpolation: Bool = false
@@ -14,6 +15,7 @@ import SwiftUI
   @Published var themeId: NSString = ""
   @Published var stateMachineId: NSString = ""
   @Published var layoutConfig: NSDictionary? = nil
+  @Published var externalAssets: [String: Data] = [:]
   @Published var onPlay: RCTDirectEventBlock = {_ in }
   @Published var onLoad: RCTDirectEventBlock = {_ in }
   @Published var onLoadError: RCTDirectEventBlock = {_ in }
@@ -138,9 +140,10 @@ import SwiftUI
      }()
 
      // Build config with all available properties
-     return AnimationConfig(
+     var config = AnimationConfig(
        autoplay: autoplay,
        loop: loop,
+       loopCount: max(loopCount, 0),
        mode: mode,
        speed: Float(speed),
        useFrameInterpolation: useFrameInterpolation,
@@ -153,6 +156,14 @@ import SwiftUI
        themeId: themeId != "" ? String(themeId) : "",
        stateMachineId: stateMachineId != "" ? String(stateMachineId) : ""
      )
+
+     if !externalAssets.isEmpty {
+       let assets = externalAssets
+       // The core reports a relative asset path with a leading slash.
+       config.assetResolver = { src in assets[src] ?? (src.hasPrefix("/") ? assets[String(src.dropFirst())] : nil) }
+     }
+
+     return config
    }
 
   func cleanupAnimation() {
@@ -442,9 +453,175 @@ class DotlottieReactNativeViewManager: RCTViewManager {
     }
   }
 
-  @objc func setFrameInterpolation(_ node:NSNumber, useFrameInterpolation:Bool) {
+  @objc func setUseFrameInterpolation(_ node:NSNumber, value:Bool) {
     withDotlottieView(node) { view in
-      _ = view._animation?.setFrameInterpolation(useFrameInterpolation)
+      _ = view._animation?.setFrameInterpolation(value)
+    }
+  }
+
+  @objc func setLoopCount(_ node:NSNumber, count:NSNumber) {
+    withDotlottieView(node) { view in
+      view.loopCount = count
+    }
+  }
+
+  @objc func setAudioVolume(_ node:NSNumber, volume:NSNumber) {
+    withDotlottieView(node) { view in
+      view._animation?.setAudioVolume(volume: Float(truncating: volume))
+    }
+  }
+
+  @objc func setThemeData(_ node:NSNumber, themeData: NSString) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.setThemeData(String(themeData))
+    }
+  }
+
+  @objc func resetTheme(_ node:NSNumber) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.resetTheme()
+    }
+  }
+
+  @objc func stateMachineLoadData(_ node:NSNumber, data: NSString) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.stateMachineLoadData(String(data))
+    }
+  }
+
+  @objc func stateMachineSetSeed(_ node:NSNumber, seed: NSNumber) {
+    withDotlottieView(node) { view in
+      guard let seedValue = UInt64(exactly: seed.doubleValue.rounded(.towardZero)) else {
+        return
+      }
+      _ = view._animation?.stateMachineSetSeed(seedValue)
+    }
+  }
+
+  @objc func stateMachineOverrideState(_ node:NSNumber, state: NSString, immediate: Bool) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.stateMachineOverrideCurrentState(String(state), immediate: immediate)
+    }
+  }
+
+  @objc func stateMachineResetInput(_ node:NSNumber, key: NSString) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.stateMachineResetInput(key: String(key))
+    }
+  }
+
+  @objc func setSlots(_ node:NSNumber, slots: NSString) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.setSlots(String(slots))
+    }
+  }
+
+  @objc func setSlot(_ node:NSNumber, slotId: NSString, json: NSString) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.setSlot(slotId: String(slotId), json: String(json))
+    }
+  }
+
+  @objc func setColorSlot(_ node:NSNumber, slotId: NSString, color: NSArray) {
+    withDotlottieView(node) { view in
+      guard let rgb = color as? [NSNumber], rgb.count >= 3 else {
+        return
+      }
+      _ = view._animation?.setColorSlot(
+        slotId: String(slotId),
+        r: Float(truncating: rgb[0]),
+        g: Float(truncating: rgb[1]),
+        b: Float(truncating: rgb[2])
+      )
+    }
+  }
+
+  @objc func setScalarSlot(_ node:NSNumber, slotId: NSString, value: NSNumber) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.setScalarSlot(slotId: String(slotId), value: Float(truncating: value))
+    }
+  }
+
+  @objc func setTextSlot(_ node:NSNumber, slotId: NSString, text: NSString) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.setTextSlot(slotId: String(slotId), text: String(text))
+    }
+  }
+
+  @objc func setVectorSlot(_ node:NSNumber, slotId: NSString, vector: NSArray) {
+    withDotlottieView(node) { view in
+      guard let xy = vector as? [NSNumber], xy.count >= 2 else {
+        return
+      }
+      _ = view._animation?.setVectorSlot(slotId: String(slotId), x: Float(truncating: xy[0]), y: Float(truncating: xy[1]))
+    }
+  }
+
+  @objc func setPositionSlot(_ node:NSNumber, slotId: NSString, position: NSArray) {
+    withDotlottieView(node) { view in
+      guard let xy = position as? [NSNumber], xy.count >= 2 else {
+        return
+      }
+      _ = view._animation?.setPositionSlot(slotId: String(slotId), x: Float(truncating: xy[0]), y: Float(truncating: xy[1]))
+    }
+  }
+
+  @objc func setImageSlot(_ node:NSNumber, slotId: NSString, src: NSString) {
+    withDotlottieView(node) { view in
+      let source = String(src)
+      if source.hasPrefix("data:") {
+        _ = view._animation?.setImageSlotDataUrl(slotId: String(slotId), dataUrl: source)
+      } else {
+        _ = view._animation?.setImageSlotPath(slotId: String(slotId), path: source)
+      }
+    }
+  }
+
+  @objc func setBezierPathSlot(_ node:NSNumber, slotId: NSString, path: NSDictionary) {
+    withDotlottieView(node) { view in
+      guard let vertices = self.points(path["vertices"]) else {
+        return
+      }
+      _ = view._animation?.setBezierPathSlot(
+        slotId: String(slotId),
+        vertices: vertices,
+        closed: (path["closed"] as? Bool) ?? false,
+        inTangents: self.points(path["inTangents"]),
+        outTangents: self.points(path["outTangents"])
+      )
+    }
+  }
+
+  private func points(_ value: Any?) -> [CGPoint]? {
+    guard let pairs = value as? [[NSNumber]] else {
+      return nil
+    }
+    return pairs.compactMap { pair in
+      pair.count >= 2 ? CGPoint(x: pair[0].doubleValue, y: pair[1].doubleValue) : nil
+    }
+  }
+
+  @objc func clearSlot(_ node:NSNumber, slotId: NSString) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.clearSlot(slotId: String(slotId))
+    }
+  }
+
+  @objc func clearSlots(_ node:NSNumber) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.clearSlots()
+    }
+  }
+
+  @objc func resetSlot(_ node:NSNumber, slotId: NSString) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.resetSlot(slotId: String(slotId))
+    }
+  }
+
+  @objc func resetSlots(_ node:NSNumber) {
+    withDotlottieView(node) { view in
+      _ = view._animation?.resetSlots()
     }
   }
 
@@ -656,6 +833,15 @@ class DotlottieReactNativeView: UIView {
     }
   }
 
+  @objc var loopCount: NSNumber = 0 {
+    didSet {
+      performIfActive {
+        dataStore.loopCount = loopCount.intValue
+        _animation?.setLoopCount(loopCount.intValue)
+      }
+    }
+  }
+
   @objc var autoplay: Bool = true {
     didSet {
       performIfActive {
@@ -754,6 +940,26 @@ class DotlottieReactNativeView: UIView {
         // (re)creating the animation when one doesn't exist yet, so the layout
         // is baked into its initial config.
         if !dataStore.applyLayout() {
+          scheduleAnimationUpdate()
+        }
+      }
+    }
+  }
+
+  @objc var externalAssets: NSDictionary? {
+    didSet {
+      performIfActive {
+        var assets: [String: Data] = [:]
+        for (src, encoded) in (externalAssets as? [String: String]) ?? [:] {
+          let base64 = encoded.hasPrefix("data:")
+            ? String(encoded.split(separator: ",", maxSplits: 1).last ?? "")
+            : encoded
+          assets[src] = Data(base64Encoded: base64, options: .ignoreUnknownCharacters)
+        }
+        dataStore.externalAssets = assets
+        // The player takes its asset resolver from the config and uses it on load,
+        // so an animation that already exists is created again.
+        if dataStore.source != "" {
           scheduleAnimationUpdate()
         }
       }
