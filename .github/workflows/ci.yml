@@ -87,7 +87,7 @@ jobs:
         run: yarn android:fabric:build
 
   build-ios:
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:
@@ -98,10 +98,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Select Xcode 16.1
+      - name: Select Xcode 16
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.1'
+          xcode-version: '16'
 
       - name: Setup
         uses: ./.github/actions/setup
