@@ -266,6 +266,20 @@ class DotlottieReactNativeModule(private val reactContext: ReactApplicationConte
     }
   }
 
+  @ReactMethod
+  fun stateMachineGetInputs(viewTag: Int, promise: Promise) {
+    withDotlottieView(viewTag, promise) { view ->
+      val inputs = Arguments.createMap()
+      view.dotLottieController.stateMachineGetInputs().forEach { (name, type) ->
+        // Names starting with "@" are built-in inputs such as "@elapsedTime".
+        if (!name.startsWith("@")) {
+          inputs.putString(name, type)
+        }
+      }
+      promise.resolve(inputs)
+    }
+  }
+
   private fun withDotlottieView(
       viewTag: Int,
       promise: Promise,

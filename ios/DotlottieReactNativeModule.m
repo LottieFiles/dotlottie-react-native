@@ -152,6 +152,12 @@ RCT_EXTERN_METHOD(
   rejecter:(RCTPromiseRejectBlock)reject
 )
 
+RCT_EXTERN_METHOD(
+  stateMachineGetInputs:(nonnull NSNumber *)node
+  resolver:(RCTPromiseResolveBlock)resolve
+  rejecter:(RCTPromiseRejectBlock)reject
+)
+
 + (BOOL)requiresMainQueueSetup
 {
   return YES;

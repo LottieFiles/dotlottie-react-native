@@ -9,8 +9,10 @@ New ref methods on Android, iOS and web:
 - Audio: `setAudioVolume`, `audioVolume`
 - Slots: `setSlots`, `setSlot`, `setColorSlot`, `setScalarSlot`, `setTextSlot`, `setVectorSlot`, `setPositionSlot`, `setImageSlot`, `setBezierPathSlot`, `clearSlot`, `clearSlots`, `resetSlot`, `resetSlots`, `getSlotIds`, `getSlotType`, `getSlot`, `getSlots`
 - Theming: `setThemeData`, `resetTheme`
-- State machine: `stateMachineLoadData`, `stateMachineSetSeed`, `stateMachineGetNumericInput`, `stateMachineGetStringInput`, `stateMachineGetBooleanInput`, `stateMachineCurrentState`, `stateMachineStatus`, `getStateMachine`
+- State machine: `stateMachineLoadData`, `stateMachineSetSeed`, `stateMachineOverrideState`, `stateMachineResetInput`, `stateMachineGetNumericInput`, `stateMachineGetStringInput`, `stateMachineGetBooleanInput`, `stateMachineGetInputs`, `stateMachineCurrentState`, `stateMachineStatus`, `getStateMachine`
 - Playback: `setLoopCount`, `setUseFrameInterpolation`, `markers`, `manifest`, and a new `loopCount` prop
+
+New `externalAssets` prop: a map from an asset `src` to its bytes as base64, for assets the animation references but does not embed (not used by the `gl` renderer on Android).
 
 Fixes:
 

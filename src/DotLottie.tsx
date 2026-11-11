@@ -71,6 +71,8 @@ export type Dotlottie = {
   stateMachineSetStringInput: (key: string, value: string) => boolean;
   stateMachineSetBooleanInput: (key: string, value: boolean) => boolean;
   stateMachineSetSeed: (seed: number) => void;
+  stateMachineOverrideState: (state: string, immediate?: boolean) => void;
+  stateMachineResetInput: (key: string) => void;
   resize: (width: number, height: number) => void;
   setSegment: (start: number, end: number) => void;
   setMarker: (marker: string) => void;
@@ -116,6 +118,7 @@ export type Dotlottie = {
   stateMachineCurrentState: () => Promise<string>;
   stateMachineStatus: () => Promise<string>;
   getStateMachine: (stateMachineId: string) => Promise<string | undefined>;
+  stateMachineGetInputs: () => Promise<Record<string, string>>;
 };
 
 interface DotlottieNativeProps {
@@ -132,6 +135,7 @@ interface DotlottieNativeProps {
   stateMachineId?: string;
   renderer?: Renderer;
   layout?: Layout;
+  externalAssets?: Record<string, string>;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;
@@ -204,6 +208,7 @@ interface DotlottieReactNativeProps {
   stateMachineId?: string;
   renderer?: Renderer;
   layout?: Layout;
+  externalAssets?: Record<string, string>;
   style: ViewStyle;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;
@@ -273,6 +278,8 @@ const COMMAND_SET_THEME_DATA = 'setThemeData';
 const COMMAND_RESET_THEME = 'resetTheme';
 const COMMAND_STATE_MACHINE_LOAD_DATA = 'stateMachineLoadData';
 const COMMAND_STATE_MACHINE_SET_SEED = 'stateMachineSetSeed';
+const COMMAND_STATE_MACHINE_OVERRIDE_STATE = 'stateMachineOverrideState';
+const COMMAND_STATE_MACHINE_RESET_INPUT = 'stateMachineResetInput';
 const COMMAND_SET_SLOTS = 'setSlots';
 const COMMAND_SET_SLOT = 'setSlot';
 const COMMAND_SET_COLOR_SLOT = 'setColorSlot';
@@ -342,6 +349,7 @@ type DotlottieNativeModule = {
     viewTag: number,
     stateMachineId: string
   ) => Promise<string | null>;
+  stateMachineGetInputs: (viewTag: number) => Promise<Record<string, string>>;
 };
 
 const NativeMetricsModule: DotlottieNativeModule | undefined =
@@ -549,6 +557,23 @@ export const DotLottie = forwardRef(
     const stateMachineSetSeedWithUIManager = useCallback(
       (seed: number) => {
         dispatchCommand(COMMAND_STATE_MACHINE_SET_SEED, [seed]);
+      },
+      [dispatchCommand]
+    );
+
+    const stateMachineOverrideStateWithUIManager = useCallback(
+      (state: string, immediate: boolean = false) => {
+        dispatchCommand(COMMAND_STATE_MACHINE_OVERRIDE_STATE, [
+          state,
+          immediate,
+        ]);
+      },
+      [dispatchCommand]
+    );
+
+    const stateMachineResetInputWithUIManager = useCallback(
+      (key: string) => {
+        dispatchCommand(COMMAND_STATE_MACHINE_RESET_INPUT, [key]);
       },
       [dispatchCommand]
     );
@@ -832,6 +857,12 @@ export const DotLottie = forwardRef(
       [ensureNativeModule, resolveHandle]
     );
 
+    const stateMachineGetInputsWithNativeModule = useCallback(async () => {
+      const module = ensureNativeModule();
+      const handle = resolveHandle();
+      return module.stateMachineGetInputs(handle);
+    }, [ensureNativeModule, resolveHandle]);
+
     useImperativeHandle(ref, () => ({
       play: playWithUIManager,
       pause: pauseWithUIManager,
@@ -853,6 +884,8 @@ export const DotLottie = forwardRef(
       stateMachineSetStringInput: stateMachineSetStringInputWithUIManager,
       stateMachineSetBooleanInput: stateMachineSetBooleanInputWithUIManager,
       stateMachineSetSeed: stateMachineSetSeedWithUIManager,
+      stateMachineOverrideState: stateMachineOverrideStateWithUIManager,
+      stateMachineResetInput: stateMachineResetInputWithUIManager,
       resize: resizeWithUIManager,
       setSegment: setSegmentWithUIManager,
       setMarker: setMarkerWithUIManager,
@@ -898,6 +931,7 @@ export const DotLottie = forwardRef(
       stateMachineCurrentState: stateMachineCurrentStateWithNativeModule,
       stateMachineStatus: stateMachineStatusWithNativeModule,
       getStateMachine: getStateMachineWithNativeModule,
+      stateMachineGetInputs: stateMachineGetInputsWithNativeModule,
     }));
 
     const parsedSource = parseSource(source);

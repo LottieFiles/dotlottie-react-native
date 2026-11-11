@@ -64,6 +64,8 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
             COMMAND_CLEAR_SLOTS to COMMAND_CLEAR_SLOTS_ID,
             COMMAND_RESET_SLOT to COMMAND_RESET_SLOT_ID,
             COMMAND_RESET_SLOTS to COMMAND_RESET_SLOTS_ID,
+            COMMAND_STATE_MACHINE_OVERRIDE_STATE to COMMAND_STATE_MACHINE_OVERRIDE_STATE_ID,
+            COMMAND_STATE_MACHINE_RESET_INPUT to COMMAND_STATE_MACHINE_RESET_INPUT_ID,
     )
   }
 
@@ -313,6 +315,17 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
     if (commandId == COMMAND_RESET_SLOTS_ID) {
       view.dotLottieController.resetSlots()
     }
+
+    if (commandId == COMMAND_STATE_MACHINE_OVERRIDE_STATE_ID) {
+      val state = args?.getString(0) ?: ""
+      val immediate = args?.getBoolean(1) ?: false
+      view.dotLottieController.stateMachineOverrideCurrentState(state, immediate)
+    }
+
+    if (commandId == COMMAND_STATE_MACHINE_RESET_INPUT_ID) {
+      val key = args?.getString(0) ?: ""
+      view.dotLottieController.stateMachineResetInput(key)
+    }
   }
 
   private fun toPointF(array: ReadableArray?): PointF? {
@@ -395,6 +408,12 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
   @ReactProp(name = "layout")
   fun setLayout(view: DotlottieReactNativeView, value: ReadableMap?) {
     view.setLayout(value)
+  }
+
+  // Not used by the OpenGL renderer.
+  @ReactProp(name = "externalAssets")
+  fun setExternalAssets(view: DotlottieReactNativeView, value: ReadableMap?) {
+    view.setExternalAssets(value)
   }
 
   override fun onDropViewInstance(view: DotlottieReactNativeView) {
@@ -533,5 +552,11 @@ class DotlottieReactNativeViewManager : SimpleViewManager<DotlottieReactNativeVi
 
     private const val COMMAND_RESET_SLOTS = "resetSlots"
     private const val COMMAND_RESET_SLOTS_ID = 44
+
+    private const val COMMAND_STATE_MACHINE_OVERRIDE_STATE = "stateMachineOverrideState"
+    private const val COMMAND_STATE_MACHINE_OVERRIDE_STATE_ID = 45
+
+    private const val COMMAND_STATE_MACHINE_RESET_INPUT = "stateMachineResetInput"
+    private const val COMMAND_STATE_MACHINE_RESET_INPUT_ID = 46
   }
 }

@@ -203,6 +203,7 @@ const styles = StyleSheet.create({
 | `themeId`               | `string`                    | `undefined`   | The theme ID to apply to the animation.                                |
 | `stateMachineId`        | `string`                    | `undefined`   | The ID of the state machine to load and start automatically.           |
 | `layout`                | `{ fit?: Fit; align?: [number, number] }` | `undefined`   | Controls how the animation fits its container. `fit`: `contain` (default), `cover`, `fill`, `fit-width`, `fit-height`, `none`. `align`: crop anchor, each `0..1`, default `[0.5, 0.5]`. |
+| `externalAssets`        | `Record<string, string>`    | `undefined`   | Assets the animation references but does not embed. Maps each asset `src`, exactly as written in the animation, to its bytes as base64 (or a `data:` URI). Changing it reloads the animation. Ignored by the `gl` renderer on Android. |
 
 **Example — fill the container and crop the overflow:**
 
@@ -248,6 +249,8 @@ ref.current?.play();
 | `stateMachineSetBooleanInput(key: string, value: boolean)` | Sets a boolean input value in the state machine. |
 | `stateMachineLoadData(data: string)`                       | Loads a state machine from its JSON definition.  |
 | `stateMachineSetSeed(seed: number)`                        | Seeds the state machine's random transitions.    |
+| `stateMachineOverrideState(state: string, immediate?: boolean)` | Moves the state machine to the given state. |
+| `stateMachineResetInput(key: string)`                      | Resets an input to its initial value.            |
 | `setLoopCount(count: number)`                              | Sets how many times to loop (`0` = forever).     |
 | `setUseFrameInterpolation(value: boolean)`                 | Turns frame interpolation on or off.             |
 | `setAudioVolume(volume: number)`                           | Sets the audio volume, from `0` to `1`.          |
@@ -267,6 +270,7 @@ These methods return a `Promise`:
 | `stateMachineCurrentState()`               | `Promise<string>`               | Name of the current state.                                      |
 | `stateMachineStatus()`                     | `Promise<string>`               | State machine status, e.g. `Running` or `Stopped`.              |
 | `getStateMachine(stateMachineId: string)`  | `Promise<string \| undefined>`  | JSON definition of a state machine in the loaded `.lottie`.     |
+| `stateMachineGetInputs()`                  | `Promise<Record<string, string>>` | State machine inputs as name → type (`Numeric`, `Boolean`, `String`, `Event`). |
 
 > On Android and iOS the state machine input getters return the type's default (`0`, `''`, `false`) when the input does not exist.
 

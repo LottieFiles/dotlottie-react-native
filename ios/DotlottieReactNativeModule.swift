@@ -164,12 +164,11 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     rejecter reject: @escaping RCTPromiseRejectBlock
   ) {
     withDotlottieView(node, rejecter: reject) { view in
-      // The iOS player reports the marker's end frame in `duration`.
       let markers = (view._animation?.markers() ?? []).map { marker -> [String: Any] in
         [
           "name": marker.name,
           "time": Double(marker.time),
-          "duration": Double(marker.duration - marker.time)
+          "duration": Double(marker.duration)
         ]
       }
       resolve(markers)
@@ -352,6 +351,19 @@ class DotlottieReactNativeModule: NSObject, RCTBridgeModule {
     withDotlottieView(node, rejecter: reject) { view in
       let definition = view._animation?.getStateMachine(stateMachineId) ?? ""
       resolve(definition.isEmpty ? nil : definition)
+    }
+  }
+
+  @objc(stateMachineGetInputs:resolver:rejecter:)
+  func stateMachineGetInputs(
+    _ node: NSNumber,
+    resolver resolve: @escaping RCTPromiseResolveBlock,
+    rejecter reject: @escaping RCTPromiseRejectBlock
+  ) {
+    withDotlottieView(node, rejecter: reject) { view in
+      // Names starting with "@" are built-in inputs such as "@elapsedTime".
+      let inputs = (view._animation?.stateMachineGetInputs() ?? [:]).filter { !$0.key.hasPrefix("@") }
+      resolve(inputs)
     }
   }
 

@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   type MutableRefObject,
   type CSSProperties,
@@ -11,7 +12,7 @@ import {
   DotLottieReact,
   type DotLottie as DotLottiePlayer,
 } from '@lottiefiles/dotlottie-react';
-import { parseSource } from './utils';
+import { decodeBase64, parseSource } from './utils';
 import type { BezierPath, Marker, Mode } from './DotLottie';
 import { toWebLayout, type Layout } from './layout';
 
@@ -36,6 +37,8 @@ export type Dotlottie = {
   stateMachineSetStringInput: (key: string, value: string) => boolean;
   stateMachineSetBooleanInput: (key: string, value: boolean) => boolean;
   stateMachineSetSeed: (seed: number) => void;
+  stateMachineOverrideState: (state: string, immediate?: boolean) => void;
+  stateMachineResetInput: (key: string) => void;
   resize: (width: number, height: number) => void;
   setSegment: (start: number, end: number) => void;
   setMarker: (marker: string) => void;
@@ -81,6 +84,20 @@ export type Dotlottie = {
   stateMachineCurrentState: () => Promise<string>;
   stateMachineStatus: () => Promise<string>;
   getStateMachine: (stateMachineId: string) => Promise<string | undefined>;
+  stateMachineGetInputs: () => Promise<Record<string, string>>;
+};
+
+const isSameAssets = (
+  a: Record<string, string> | undefined,
+  b: Record<string, string> | undefined
+): boolean => {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  const keys = Object.keys(a);
+  return (
+    keys.length === Object.keys(b).length &&
+    keys.every((key) => a[key] === b[key])
+  );
 };
 
 const parseJson = (json: string): unknown => {
@@ -105,6 +122,7 @@ interface DotlottieReactNativeProps {
   stateMachineId?: string;
   renderer?: 'sw' | 'gl';
   layout?: Layout;
+  externalAssets?: Record<string, string>;
   style?: any;
   ref?: MutableRefObject<any>;
   onLoad?: () => void;
@@ -160,6 +178,7 @@ export const DotLottie = forwardRef(
       useFrameInterpolation,
       stateMachineId,
       layout,
+      externalAssets,
       style,
       onLoad,
       onComplete,
@@ -441,6 +460,15 @@ export const DotLottie = forwardRef(
       stateMachineSetSeed: (seed: number) => {
         dotLottieRef.current?.stateMachineSetSeed(seed);
       },
+      stateMachineOverrideState: (
+        state: string,
+        immediate: boolean = false
+      ) => {
+        dotLottieRef.current?.stateMachineOverrideState(state, immediate);
+      },
+      stateMachineResetInput: (key: string) => {
+        dotLottieRef.current?.stateMachineResetInput(key);
+      },
       resize: (_width: number, _height: number) => {
         dotLottieRef.current?.resize();
       },
@@ -598,6 +626,18 @@ export const DotLottie = forwardRef(
           undefined
         );
       },
+      stateMachineGetInputs: async () => {
+        // The web player returns a flat [name, type, name, type, ...] list.
+        const flat = dotLottieRef.current?.stateMachineGetInputs() ?? [];
+        const inputs: Record<string, string> = {};
+        for (let i = 0; i + 1 < flat.length; i += 2) {
+          const name = flat[i] as string;
+          if (!name.startsWith('@')) {
+            inputs[name] = flat[i + 1] as string;
+          }
+        }
+        return inputs;
+      },
     }));
 
     // Parse source to get the URL
@@ -619,9 +659,66 @@ export const DotLottie = forwardRef(
           ]
         : undefined;
 
+    // Keep the same object while the content is unchanged, so an inline
+    // `externalAssets={{ ... }}` does not reload the animation on every render.
+    const assetsRef = useRef(externalAssets);
+    if (!isSameAssets(assetsRef.current, externalAssets)) {
+      assetsRef.current = externalAssets;
+    }
+    const assets = assetsRef.current;
+
+    const assetResolver = useMemo(() => {
+      if (!assets) return undefined;
+      const cache = new Map<string, Uint8Array | undefined>();
+      return (assetSrc: string) => {
+        const encoded = assets[assetSrc];
+        if (encoded === undefined) return undefined;
+        if (!cache.has(assetSrc)) {
+          cache.set(assetSrc, decodeBase64(encoded));
+        }
+        return cache.get(assetSrc);
+      };
+    }, [assets]);
+
+    // DotLottieReact does not pass an asset resolver to the player, and the
+    // player only takes one in load(). So with external assets DotLottieReact
+    // gets no src and the animation is loaded here instead.
+    const loadConfigRef = useRef({});
+    loadConfigRef.current = {
+      autoplay,
+      loop,
+      loopCount,
+      speed,
+      themeId,
+      marker,
+      segment,
+      mode,
+      useFrameInterpolation,
+      layout: toWebLayout(layout),
+    };
+
+    useEffect(() => {
+      const dotLottie = dotLottieRef.current;
+      if (!assetResolver || !dotLottie || !src) return;
+
+      const load = () => {
+        dotLottie.load({ ...loadConfigRef.current, src, assetResolver });
+      };
+
+      if (dotLottie.isReady) {
+        load();
+        return;
+      }
+
+      dotLottie.addEventListener('ready', load);
+      return () => {
+        dotLottie.removeEventListener('ready', load);
+      };
+    }, [src, assetResolver]);
+
     return (
       <DotLottieReact
-        src={src}
+        src={assetResolver ? undefined : src}
         autoplay={autoplay}
         loop={loop}
         loopCount={loopCount}
