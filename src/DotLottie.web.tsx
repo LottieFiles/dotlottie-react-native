@@ -502,7 +502,8 @@ export const DotLottie = forwardRef(
       setSlot: (slotId: string, json: string) => {
         const parsed = parseJson(json);
         if (parsed !== undefined) {
-          dotLottieRef.current?.setSlots({ [slotId]: parsed });
+          // The Lottie slots format wraps each value in `p`.
+          dotLottieRef.current?.setSlots({ [slotId]: { p: parsed } });
         }
       },
       setColorSlot: (slotId: string, color: [number, number, number]) => {
