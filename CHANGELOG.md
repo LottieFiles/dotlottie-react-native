@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.1
+### Patch Changes
+
+
+
+- [#87](https://github.com/LottieFiles/dotlottie-react-native/pull/87) [`9b8e738`](https://github.com/LottieFiles/dotlottie-react-native/commit/9b8e7382cc393b5c3d55bb6000fede442e888c1e) Thanks [@theashraf](https://github.com/theashraf)! - chore(ios): bump dotlottie-ios to `0.18.0`, which no longer bundles the WebGPU renderer. iOS apps stop embedding `WgpuNative.framework`, about 6.6 MB smaller. This package never used that renderer, so nothing else changes.
+
 ## 0.13.0
 ### Minor Changes
 
